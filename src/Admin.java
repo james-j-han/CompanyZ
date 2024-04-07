@@ -16,6 +16,7 @@ public class Admin {
         // Map empID to employee object
         employees = new HashMap<>();
                 
+        // Initial DB connection to store all information locally
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
             Statement myStmt = myConn.createStatement();
@@ -81,28 +82,72 @@ public class Admin {
         return employees;
     }
 
+    // Test case 'b': search for employee by empID
     public Employee searchEmployeeByEmpID(int empID) {
+        // O(1)
         Employee employee = employees.get(empID);
         return employee;
+        // PASS: must handle null edge case
     }
 
+    // Test case 'b': search for employee by ssn
     public Employee searchEmployeeBySSN(String ssn) {
+        // O(n)
         for (Employee e : employees.values()) {
             if (e.getSsn().equals(ssn)) return e;
         }
         return null;
+        // PASS: although testing was limited, must handle edge cases
     }
 
+    // Test case 'b': search for employee by name
+    public Employee searchEmployeeByName() {
+        // Case 1: first name only (possible duplicates)
+        // Case 2: last name only (possibly duplicates)
+        // Case 3: first and last name
+        // Handle each edge case
+        return null;
+        // NOT TESTED
+    }
+
+    // Test case 'a': update employee data
     public void updateEmployeeSSN(int empid, String ssn) {
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
-            Statement myStmt = myConn.createStatement();
+            // Prepared statement to avoid SQL injection
             String query = "UPDATE employees SET ssn = ? WHERE empid = ?";
             PreparedStatement ps = myConn.prepareStatement(query);
+            // Note: ? index starts at 1 and must be in order
             ps.setString(1, ssn);
             ps.setInt(2, empid);
             ps.executeUpdate();
-            // myStmt.executeUpdate("UPDATE employees SET ssn=" + ssn + "WHERE empid=" + empid);
+            myConn.close();
+        } 
+        catch (Exception e) 
+        {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+        // PASS: must handle edge cases
+        // Implement updating of data for other fields
+        // Also need to update local variable if update query is successful
+    }
+
+    // Test case 'c': update salary for all employees less than constraint
+    public void updateAllSalariesLessThan(int newAmount, int constraint) {
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            // O(n)
+            for (Employee e : employees.values()) {
+                // Check if salary is less than constraint
+                // Update salaries with newAmount
+            }
+            // Prepared statement to avoid SQL injection
+            String query = "UPDATE employees SET ssn = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(query);
+            // Note: ? index starts at 1 and must be in order
+            // ps.setString(1, ssn);
+            // ps.setInt(2, empid);
+            ps.executeUpdate();
             myConn.close();
         } 
         catch (Exception e) 
