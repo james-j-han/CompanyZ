@@ -83,7 +83,7 @@ public class Admin {
     }
 
     // Test case 'b': search for employee by empID
-    public Employee searchEmployeeByEmpID(int empID) {
+    public Employee searchEmployee(int empID) {
         // O(1)
         Employee employee = employees.get(empID);
         return employee;
@@ -91,7 +91,8 @@ public class Admin {
     }
 
     // Test case 'b': search for employee by ssn
-    public Employee searchEmployeeBySSN(String ssn) {
+    
+    public Employee searchEmployee(String ssn) {
         // O(n)
         for (Employee e : employees.values()) {
             if (e.getSsn().equals(ssn)) return e;
@@ -101,7 +102,8 @@ public class Admin {
     }
 
     // Test case 'b': search for employee by name
-    public Employee searchEmployeeByName() {
+    public Employee searchEmployee(String name) {
+        
         // Case 1: first name only (possible duplicates)
         // Case 2: last name only (possibly duplicates)
         // Case 3: first and last name
