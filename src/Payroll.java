@@ -1,15 +1,15 @@
-import java.util.Date;
+import java.sql.Date;
 
 public class Payroll {
     private int payID;
     private Date payDate;
-    private int earnings;
-    private int fedTax;
-    private int fedMed;
-    private int fedSS;
-    private int stateTax;
-    private int retire401k;
-    private int healthCare;
+    private double earnings;
+    private double fedTax;
+    private double fedMed;
+    private double fedSS;
+    private double stateTax;
+    private double retire401k;
+    private double healthCare;
 
     public Payroll() {
 
@@ -31,59 +31,59 @@ public class Payroll {
         this.payDate = payDate;
     }
 
-    public int getEarnings() {
+    public double getEarnings() {
         return earnings;
     }
 
-    public void setEarnings(int earnings) {
+    public void setEarnings(double earnings) {
         this.earnings = earnings;
     }
 
-    public int getFedTax() {
+    public double getFedTax() {
         return fedTax;
     }
 
-    public void setFedTax(int fedTax) {
+    public void setFedTax(double fedTax) {
         this.fedTax = fedTax;
     }
 
-    public int getFedMed() {
+    public double getFedMed() {
         return fedMed;
     }
 
-    public void setFedMed(int fedMed) {
+    public void setFedMed(double fedMed) {
         this.fedMed = fedMed;
     }
 
-    public int getFedSS() {
+    public double getFedSS() {
         return fedSS;
     }
 
-    public void setFedSS(int fedSS) {
+    public void setFedSS(double fedSS) {
         this.fedSS = fedSS;
     }
 
-    public int getStateTax() {
+    public double getStateTax() {
         return stateTax;
     }
 
-    public void setStateTax(int stateTax) {
+    public void setStateTax(double stateTax) {
         this.stateTax = stateTax;
     }
 
-    public int getRetire401k() {
+    public double getRetire401k() {
         return retire401k;
     }
 
-    public void setRetire401k(int retire401k) {
+    public void setRetire401k(double retire401k) {
         this.retire401k = retire401k;
     }
 
-    public int getHealthCare() {
+    public double getHealthCare() {
         return healthCare;
     }
 
-    public void setHealthCare(int healthCare) {
+    public void setHealthCare(double healthCare) {
         this.healthCare = healthCare;
     }
 }

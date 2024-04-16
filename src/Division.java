@@ -1,3 +1,5 @@
+import java.util.HashMap;
+
 public class Division {
     private int divisionID;
     private String name;
@@ -7,9 +9,14 @@ public class Division {
     private String state;
     private String country;
     private String postalCode;
+    private HashMap<Integer, String> divisionsMap;
 
     public Division() {
-        
+        divisionsMap = new HashMap<>();
+        divisionsMap.put(1, "Technology Engineering");
+        divisionsMap.put(2, "Marketing");
+        divisionsMap.put(3, "Human Resources");
+        divisionsMap.put(4, "HQ");
     }
 
     public int getDivisionID() {
@@ -18,13 +25,14 @@ public class Division {
 
     public void setDivisionID(int divisionID) {
         this.divisionID = divisionID;
+        setName(divisionsMap.get(divisionID));
     }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
+    private void setName(String name) {
         this.name = name;
     }
 
@@ -74,5 +82,9 @@ public class Division {
 
     public void setPostalCode(String postalCode) {
         this.postalCode = postalCode;
+    }
+
+    public HashMap<Integer, String> getDivisionsMap() {
+        return divisionsMap;
     }
 }
