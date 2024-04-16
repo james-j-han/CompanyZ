@@ -88,10 +88,32 @@ public class Admin {
     }
 
     public void addEmployee() {
+        Employee newEmployee = createEmployee();
+        newEmployee.setDivision(createDivision());
+        newEmployee.setPayroll(createPayroll());
+        newEmployee.setAddress(createAddress());
+
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            Statement myStmt = myConn.createStatement();
+            String sqlCommand = String.format(
+                                "INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn)"
+                              , newEmployee.getFirstName(), newEmployee.getLastName(), newEmployee.getEmail()
+                              , newEmployee.getHireDate(), newEmployee.getSalary(), newEmployee.getSsn());
+            // INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn) VALUES (" + newEmployee.getFirstName() + ", " + newEmployee.getLastName() + ", " + newEmployee.getEmail() + ", " + newEmployee.getHireDate() + ", " + newEmployee.getSalary() + ", " + newEmployee.getSsn() + ")";
+            myStmt.executeUpdate(sqlCommand, Statement.RETURN_GENERATED_KEYS);
+            ResultSet rs = myStmt.getGeneratedKeys();
+            employees.put(rs.getInt(1), newEmployee);
+            myConn.close();
+        } 
+        catch (Exception e) 
+        {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+    }
+
+    private Employee createEmployee() {
         Employee newEmployee = new Employee();
-        Division division = new Division();
-        Payroll payroll = new Payroll();
-        Address address = new Address();
         Calendar calendar = Calendar.getInstance();
         System.out.println("What is the Job Title? ");
         newEmployee.setTitle(validateStringInput());
@@ -109,6 +131,7 @@ public class Admin {
         System.out.println("What is the Hire Date? Enter Year: ");
         calendar.set(Calendar.YEAR, validateIntegerInput());
         Date date = new Date((calendar.getTimeInMillis()));
+        newEmployee.setHireDate(date);
         System.out.println("What is the Salary? ");
         newEmployee.setSalary(validateDoubleInput());
         System.out.println("What is the SSN (no dashes)? ");
@@ -117,22 +140,86 @@ public class Admin {
         // for testing purposes, need to read nextLine() to wait for input before print
         // scanner.nextLine();
         // System.out.println(date);
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            Statement myStmt = myConn.createStatement();
-            String sqlCommand = "INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn) VALUES (" + newEmployee.getFirstName() + ", " + newEmployee.getLastName() + ", " + newEmployee.getEmail() + ", " + newEmployee.getHireDate() + ", " + newEmployee.getSalary() + ", " + newEmployee.getSsn() + ")";
-            myStmt.executeUpdate(sqlCommand);
-            employees.put(newEmployee.getEmpID(), newEmployee);
-            myConn.close();
-        } 
-        catch (Exception e) 
-        {
-            System.out.println("ERROR " + e.getLocalizedMessage());
-        }
-        employees.put(null, newEmployee);
+        return newEmployee;
     }
 
-    public String validateStringInput() {
+    private Division createDivision() {
+        Division division = new Division();
+        System.out.println("What is the Divison Name? ");
+        division.setName(validateStringInput());
+        System.out.println("What is the Divison City? ");
+        division.setCity(validateStringInput());
+        System.out.println("What is the Divison Address 1? ");
+        division.setAddressLine1(validateStringInput());
+        System.out.println("What is the Divison Address 2? ");
+        division.setAddressLine2(validateStringInput());
+        System.out.println("What is the Divison State? ");
+        division.setState(validateStringInput());
+        System.out.println("What is the Divison Country? ");
+        division.setCountry(validateStringInput());
+        System.out.println("What is the Divison Postal Code? ");
+        division.setPostalCode(validateStringInput());
+        return division;
+    }
+
+    private Payroll createPayroll() {
+        Payroll payroll = new Payroll();
+        Calendar calendar = Calendar.getInstance();
+        System.out.println("What is the Pay Date? Enter Month: ");
+        // Calendar.MONTH starts at index 0 = January ~ 11 = December
+        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        System.out.println("What is the Pay Date? Enter Day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.println("What is the Pay Date? Enter Year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date date = new Date((calendar.getTimeInMillis()));
+        
+        payroll.setPayDate(date);
+        System.out.println("What is the Earnings? ");
+        payroll.setEarnings(validateIntegerInput());
+        System.out.println("What is the Federal Tax? ");
+        payroll.setFedTax(validateIntegerInput());
+        System.out.println("What is the Federal Med? ");
+        payroll.setFedMed(validateIntegerInput());
+        System.out.println("What is the Federal SS? ");
+        payroll.setFedSS(validateIntegerInput());
+        System.out.println("What is the State Tax? ");
+        payroll.setStateTax(validateIntegerInput());
+        System.out.println("What is the Retire 401k? ");
+        payroll.setRetire401k(validateIntegerInput());
+        System.out.println("What is the Health Care? ");
+        payroll.setHealthCare(validateIntegerInput());
+        // payroll.setEmpID
+        return payroll;
+    }
+
+    private Address createAddress() {
+        Address address = new Address();
+        Calendar calendar = Calendar.getInstance();
+        System.out.println("What is the Gender? ");
+        address.setGender(validateStringInput());
+        System.out.println("What are the pronouns? ");
+        address.setPronouns(validateStringInput());
+        System.out.println("What is the Identified Race? ");
+        address.setIdentifiedRace(validateStringInput());
+        System.out.println("What is the Date of Birth? Enter Month: ");
+        // Calendar.MONTH starts at index 0 = January ~ 11 = December
+        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        System.out.println("What is the Date of Birth? Enter Day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.println("What is the Date of Birth? Enter Year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date date = new Date((calendar.getTimeInMillis()));
+        
+        address.setDob(date);
+        System.out.println("What is the Mobile Phone Number (no dashes)? ");
+        address.setPhone(String.valueOf(validateIntegerInput()));
+        // cityID
+        // stateID
+        return address;
+    }
+
+    private String validateStringInput() {
         String input = "";
         boolean valid = true;
         while (valid) {
@@ -148,7 +235,7 @@ public class Admin {
         return input;
     }
 
-    public int validateIntegerInput() {
+    private int validateIntegerInput() {
         int input = 0;
         boolean valid = true;
         while (valid) {
@@ -164,7 +251,7 @@ public class Admin {
         return input;
     }
 
-    public double validateDoubleInput() {
+    private double validateDoubleInput() {
         double input = 0.0;
         boolean valid = true;
         while (valid) {
