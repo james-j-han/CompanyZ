@@ -1,5 +1,6 @@
 import java.sql.*;
 import java.util.HashMap;
+import java.util.Scanner;
 
 public class Admin {
 
@@ -7,6 +8,7 @@ public class Admin {
     private String user = "root";
     private String password = "Yessica6446!";
     private HashMap<Integer, Employee> employees;
+    private Scanner scanner;
     
     public Admin() {
         init();
@@ -15,12 +17,14 @@ public class Admin {
     private void init() {
         // Map empID to employee object
         employees = new HashMap<>();
+        scanner = new Scanner(System.in);
                 
         // Initial DB connection to store all information locally
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
             Statement myStmt = myConn.createStatement();
-            ResultSet myRS = myStmt.executeQuery("SELECT * FROM employees e LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid LEFT JOIN job_titles jt ON jt.job_title_id = ejt.job_title_id LEFT JOIN payroll p ON p.empid = e.empid LEFT JOIN employee_division ed ON ed.empid = e.empid LEFT JOIN division d ON d.ID = ed.div_ID LEFT JOIN address a ON a.empid = e.empid");
+            String sqlCommand = "SELECT * FROM employees e LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid LEFT JOIN job_titles jt ON jt.job_title_id = ejt.job_title_id LEFT JOIN payroll p ON p.empid = e.empid LEFT JOIN employee_division ed ON ed.empid = e.empid LEFT JOIN division d ON d.ID = ed.div_ID LEFT JOIN address a ON a.empid = e.empid";
+            ResultSet myRS = myStmt.executeQuery(sqlCommand);
 
             while (myRS.next()) {
                 Employee employee = new Employee();
@@ -31,7 +35,7 @@ public class Admin {
                 employee.setLastName(myRS.getString("Lname"));
                 employee.setEmail(myRS.getString("email"));
                 employee.setHireDate(myRS.getDate("HireDate"));
-                employee.setSalary(myRS.getInt("Salary"));
+                employee.setSalary(myRS.getBigDecimal("Salary").doubleValue());
                 employee.setSsn(myRS.getString("ssn"));
 
                 Payroll payroll = new Payroll();
@@ -82,6 +86,87 @@ public class Admin {
         return employees;
     }
 
+    public void addEmployee() {
+        Employee newEmployee = new Employee();
+        Division division = new Division();
+        Payroll payroll = new Payroll();
+        Address address = new Address();
+        System.out.println("What is the Job Title? ");
+        newEmployee.setTitle(validateStringInput());
+        System.out.println("What is the First Name? ");
+        newEmployee.setFirstName(validateStringInput());
+        System.out.println("What is the Last Name? ");
+        newEmployee.setLastName(validateStringInput());
+        System.out.println("What is the Email? ");
+        newEmployee.setEmail(validateStringInput());
+        System.out.println("What is the Hire Date? ");
+
+        System.out.println("What is the Salary? ");
+        newEmployee.setSalary(validateDoubleInput());
+        System.out.println("What is the SSN? ");
+        newEmployee.setSsn(validateStringInput());
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            Statement myStmt = myConn.createStatement();
+            String sqlCommand = "INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn) VALUES (" + newEmployee.getFirstName() + ", " + newEmployee.getLastName() + ", " + newEmployee.getEmail() + ", " + newEmployee.getHireDate() + ", " + newEmployee.getSalary() + ", " + newEmployee.getSsn() + ")";
+            myStmt.executeUpdate(sqlCommand);
+            employees.put(newEmployee.getEmpID(), newEmployee);
+            myConn.close();
+        } 
+        catch (Exception e) 
+        {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+    }
+
+    public String validateStringInput() {
+        String input = "";
+        boolean valid = true;
+        while (valid) {
+            try {
+                input = scanner.nextLine();
+                valid = false;
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                scanner.nextLine();
+            }
+        }
+        return input;
+    }
+
+    public int validateIntegerInput() {
+        int input = 0;
+        boolean valid = true;
+        while (valid) {
+            try {
+                input = scanner.nextInt();
+                valid = false;
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                scanner.nextLine();
+            }
+        }
+        return input;
+    }
+
+    public double validateDoubleInput() {
+        double input = 0.0;
+        boolean valid = true;
+        while (valid) {
+            try {
+                input = scanner.nextDouble();
+                valid = false;
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                scanner.nextLine();
+            }
+        }
+        return input;
+    }
+
     // Test case 'b': search for employee by empID
     public Employee searchEmployee(int empID) {
         // O(1)
@@ -92,14 +177,14 @@ public class Admin {
 
     // Test case 'b': search for employee by ssn
     
-    public Employee searchEmployee(String ssn) {
-        // O(n)
-        for (Employee e : employees.values()) {
-            if (e.getSsn().equals(ssn)) return e;
-        }
-        return null;
-        // PASS: although testing was limited, must handle edge cases
-    }
+    // public Employee searchEmployee(String ssn) {
+    //     // O(n)
+    //     for (Employee e : employees.values()) {
+    //         if (e.getSsn().equals(ssn)) return e;
+    //     }
+    //     return null;
+    //     // PASS: although testing was limited, must handle edge cases
+    // }
 
     // Test case 'b': search for employee by name
     public Employee searchEmployee(String name) {

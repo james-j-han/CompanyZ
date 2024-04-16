@@ -7,7 +7,7 @@ public class Employee extends Job {
     private String lastName;
     private String email;
     private Date hireDate;
-    private int salary;
+    private double salary;
     private String ssn;
     private Division division;
     private Payroll payroll;
@@ -57,11 +57,11 @@ public class Employee extends Job {
         this.hireDate = hireDate;
     }
 
-    public int getSalary() {
+    public double getSalary() {
         return salary;
     }
 
-    public void setSalary(int salary) {
+    public void setSalary(double salary) {
         this.salary = salary;
     }
 
