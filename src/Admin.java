@@ -1,4 +1,5 @@
 import java.sql.*;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Scanner;
 
@@ -91,6 +92,7 @@ public class Admin {
         Division division = new Division();
         Payroll payroll = new Payroll();
         Address address = new Address();
+        Calendar calendar = Calendar.getInstance();
         System.out.println("What is the Job Title? ");
         newEmployee.setTitle(validateStringInput());
         System.out.println("What is the First Name? ");
@@ -99,12 +101,22 @@ public class Admin {
         newEmployee.setLastName(validateStringInput());
         System.out.println("What is the Email? ");
         newEmployee.setEmail(validateStringInput());
-        System.out.println("What is the Hire Date? ");
-
+        System.out.println("What is the Hire Date? Enter Month: ");
+        // Calendar.MONTH starts at index 0 = January ~ 11 = December
+        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        System.out.println("What is the Hire Date? Enter Day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.println("What is the Hire Date? Enter Year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date date = new Date((calendar.getTimeInMillis()));
         System.out.println("What is the Salary? ");
         newEmployee.setSalary(validateDoubleInput());
-        System.out.println("What is the SSN? ");
-        newEmployee.setSsn(validateStringInput());
+        System.out.println("What is the SSN (no dashes)? ");
+        // first validate SSN is numerical, then convert to String
+        newEmployee.setSsn(String.valueOf(validateIntegerInput()));
+        // for testing purposes, need to read nextLine() to wait for input before print
+        // scanner.nextLine();
+        // System.out.println(date);
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
             Statement myStmt = myConn.createStatement();
@@ -117,6 +129,7 @@ public class Admin {
         {
             System.out.println("ERROR " + e.getLocalizedMessage());
         }
+        employees.put(null, newEmployee);
     }
 
     public String validateStringInput() {

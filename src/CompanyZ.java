@@ -4,6 +4,7 @@ public class CompanyZ {
         Admin admin = new Admin();
         // admin.updateEmployeeSSN(1, "123456789");
         // System.out.println(admin.validateStringInput());
+        admin.addEmployee();
 
         // if (test == null) {
         //     System.out.println("There is no employee with ID: " + empID);
@@ -12,8 +13,8 @@ public class CompanyZ {
         // }
 
         // Test to see if working correctly
-        for (Employee e : admin.getEmployees().values()) {
-            System.out.println(e.getFirstName() + " " + e.getLastName() + " " + e.getSalary());
-        }
+        // for (Employee e : admin.getEmployees().values()) {
+        //     System.out.println(e.getFirstName() + " " + e.getLastName() + " " + e.getSalary());
+        // }
     }
 }
