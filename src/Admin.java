@@ -1,6 +1,8 @@
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 public class Admin {
@@ -10,8 +12,11 @@ public class Admin {
     private String password = "Yessica6446!";
     private HashMap<Integer, Employee> employees;
     private HashMap<Integer, Job> jobs;
+    private HashMap<Integer, Integer> employee_job_titles;
     private HashMap<Integer, Division> divisions;
-    // private HashMap<Integer, Payroll> payrolls;
+    private HashMap<Integer, Integer> employee_division;
+    private HashMap<Integer, List<Payroll>> payrolls;
+    private HashMap<Integer, Address> address;
     private Scanner scanner;
     
     public Admin() {
@@ -22,8 +27,10 @@ public class Admin {
         // Map empID to employee object
         employees = new HashMap<>();
         jobs = new HashMap<>();
+        employee_job_titles = new HashMap<>();
         divisions = new HashMap<>();
-        // payrolls = new HashMap<>();
+        employee_division = new HashMap<>();
+        payrolls = new HashMap<>();
         scanner = new Scanner(System.in);
 
         // Initialize jobs locally
@@ -38,6 +45,19 @@ public class Admin {
                 job.setTitle(rs.getString("job_title"));
 
                 jobs.put(job.getJobID(), job);
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+
+        // Initialize employee_job_titles locally
+        try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+            Statement myStmt = myConn.createStatement();
+            String query = "SELECT * FROM employee_job_titles";
+            ResultSet rs = myStmt.executeQuery(query);
+
+            while (rs.next()) {
+                employee_job_titles.put(rs.getInt("empid"), rs.getInt("job_title_id"));
             }
         } catch (Exception e) {
             System.out.println("ERROR " + e.getLocalizedMessage());
@@ -66,38 +86,24 @@ public class Admin {
             System.out.println("ERROR " + e.getLocalizedMessage());
         }
 
-        // Initialize payrolls locally
-        // No unique ID to store in HashMap... retrieve from DB instead
-        // try (Connection myConn = DriverManager.getConnection(url, user, password)) {
-        //     Statement myStmt = myConn.createStatement();
-        //     String query = "SELECT * FROM payroll";
-        //     ResultSet rs = myStmt.executeQuery(query);
+        // Initialize employee_division locally
+        try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+            Statement myStmt = myConn.createStatement();
+            String query = "SELECT * FROM employee_division";
+            ResultSet rs = myStmt.executeQuery(query);
 
-        //     while (rs.next()) {
-        //         Payroll payroll = new Payroll();
-        //         payroll.setPayID(rs.getInt("payID"));
-        //         payroll.setPayDate(rs.getDate("pay_date"));
-        //         payroll.setEarnings(rs.getDouble("earnings"));
-        //         payroll.setFedTax(rs.getDouble("fed_tax"));
-        //         payroll.setFedMed(rs.getDouble("fed_med"));
-        //         payroll.setFedSS(rs.getDouble("fed_SS"));
-        //         payroll.setStateTax(rs.getDouble("state_tax"));
-        //         payroll.setRetire401k(rs.getDouble("retire_401k"));
-        //         payroll.setHealthCare(rs.getDouble("health_care"));
-        //         payroll.setEmpID(rs.getInt("empid"));
-
-        //         payrolls.put(payroll.getPayID(), payroll);
-        //     }
-        // } catch (Exception e) {
-        //     System.out.println("ERROR " + e.getLocalizedMessage());
-        // }
-        // queryTester();
+            while (rs.next()) {
+                employee_division.put(rs.getInt("empid"), rs.getInt("div_ID"));
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
                 
-        // Initial DB connection to store all information locally
+        // Initialize employees locally
         try (Connection myConn = DriverManager.getConnection(url, user, password)) 
         {
             Statement myStmt = myConn.createStatement();
-            String query = "SELECT e.*, ejt.job_title_id, ed.div_ID, p.*, a.* FROM employees e LEFT JOIN employee_job_titles ejt ON e.empid = ejt.empid LEFT JOIN employee_division ed ON e.empid = ed.empid LEFT JOIN payroll p ON e.empid = p.empid LEFT JOIN address a ON e.empid = a.empid";
+            String query = "SELECT * FROM employees";
             ResultSet rs = myStmt.executeQuery(query);
 
             while (rs.next()) {
@@ -107,35 +113,66 @@ public class Admin {
                 employee.setLastName(rs.getString("Lname"));
                 employee.setEmail(rs.getString("email"));
                 employee.setHireDate(rs.getDate("HireDate"));
-                employee.setSalary(rs.getBigDecimal("Salary").doubleValue());
+                employee.setSalary(rs.getDouble("Salary"));
                 employee.setSsn(rs.getString("ssn"));
-                employee.setJobID(rs.getInt("job_title_id"));
-                employee.setDivID(rs.getInt("div_ID"));
+                employees.put(employee.getEmpID(), employee);
+            }
+            myConn.close();
+        }  catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
 
+        // Initialize address locally
+        try (Connection myConn = DriverManager.getConnection(url, user, password)) 
+        {
+            Statement myStmt = myConn.createStatement();
+            String query = "SELECT * FROM address";
+            ResultSet rs = myStmt.executeQuery(query);
+
+            while (rs.next()) {
+                Address a = new Address();
+                a.setEmpID(rs.getInt("empid"));
+                a.setGender(rs.getString("gender"));
+                a.setPronouns(rs.getString("pronouns"));
+                a.setIdentifiedRace(rs.getString("identified_race"));
+                a.setDob(rs.getDate("dob"));
+                a.setPhone(rs.getString("mobile_phone"));
+                a.setCityID(rs.getInt("city_id"));
+                a.setStateID(rs.getInt("state_id"));
+                address.put(a.getEmpID(), a);
+            }
+            myConn.close();
+        }  catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+
+        // Initialize payroll locally
+        try (Connection myConn = DriverManager.getConnection(url, user, password)) 
+        {
+            Statement myStmt = myConn.createStatement();
+            String query = "SELECT * FROM payroll";
+            ResultSet rs = myStmt.executeQuery(query);
+
+            while (rs.next()) {
                 Payroll payroll = new Payroll();
                 payroll.setPayID(rs.getInt("payID"));
                 payroll.setPayDate(rs.getDate("pay_date"));
-                payroll.setEarnings(rs.getInt("earnings"));
-                payroll.setFedTax(rs.getInt("fed_tax"));
-                payroll.setFedMed(rs.getInt("fed_med"));
-                payroll.setFedSS(rs.getInt("fed_SS"));
-                payroll.setStateTax(rs.getInt("state_tax"));
-                payroll.setRetire401k(rs.getInt("retire_401k"));
-                payroll.setHealthCare(rs.getInt("health_care"));
+                payroll.setEarnings(rs.getDouble("earnings"));
+                payroll.setFedTax(rs.getDouble("fed_tax"));
+                payroll.setFedMed(rs.getDouble("fed_med"));
+                payroll.setFedSS(rs.getDouble("fed_SS"));
+                payroll.setStateTax(rs.getDouble("state_tax"));
+                payroll.setRetire401k(rs.getDouble("retire_401k"));
+                payroll.setHealthCare(rs.getDouble("health_care"));
+                payroll.setEmpID(rs.getInt("empid"));
 
-                Address address = new Address();
-                address.setEmpID(rs.getInt("empid"));
-                address.setGender(rs.getString("gender"));
-                address.setPronouns(rs.getString("pronouns"));
-                address.setIdentifiedRace(rs.getString("identified_race"));
-                address.setDob(rs.getDate("dob"));
-                address.setPhone(rs.getString("mobile_phone"));
-                address.setCityID(rs.getInt("city_id"));
-                address.setStateID(rs.getInt("state_id"));
-
-                employee.setPayroll(payroll);
-                employee.setAddress(address);
-                employees.put(employee.getEmpID(), employee);
+                if (!payrolls.containsKey(payroll.getEmpID())) {
+                    List<Payroll> list = new ArrayList<>();
+                    list.add(payroll);
+                    payrolls.put(payroll.getEmpID(), list);
+                } else {
+                    payrolls.get(payroll.getEmpID()).add(payroll);
+                }
             }
             myConn.close();
         }  catch (Exception e) {
@@ -157,8 +194,6 @@ public class Admin {
 
     public void addEmployee() {
         Employee newEmployee = createEmployee();
-        // newEmployee.setPayroll(createPayroll());
-        // newEmployee.setAddress(createAddress());
         int empID;
 
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
@@ -189,46 +224,6 @@ public class Admin {
             ps.setInt(1, empID);
             ps.setInt(2, newEmployee.getDivID());
             ps.executeUpdate();
-            // sqlCommand = "INSERT INTO division (ID, Name, city, addressLine1, addressLine2, state, country, postalCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            // ps = myConn.prepareStatement(sqlCommand);
-            // ps.setInt(1, newEmployee.getDivision().getDivisionID());
-            // ps.setString(2, newEmployee.getDivision().getName());
-            // ps.setString(3, newEmployee.getDivision().getCity());
-            // ps.setString(4, newEmployee.getDivision().getAddressLine1());
-            // ps.setString(5, newEmployee.getDivision().getAddressLine2());
-            // ps.setString(6, newEmployee.getDivision().getState());
-            // ps.setString(7, newEmployee.getDivision().getCountry());
-            // ps.setString(8, newEmployee.getDivision().getPostalCode());
-            // ps.executeUpdate();
-            // System.out.println("Executed Division update");
-
-            // sqlCommand = "INSERT INTO payroll (payID, pay_date, earnings, fed_tax, fed_med, fed_SS, state_tax, retire_401k, health_care, empID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            // ps = myConn.prepareStatement(sqlCommand);
-            // ps.setInt(1, newEmployee.getPayroll().getPayID());
-            // ps.setDate(2, newEmployee.getPayroll().getPayDate());
-            // ps.setDouble(3, newEmployee.getPayroll().getEarnings());
-            // ps.setDouble(4, newEmployee.getPayroll().getFedTax());
-            // ps.setDouble(5, newEmployee.getPayroll().getFedMed());
-            // ps.setDouble(6, newEmployee.getPayroll().getFedSS());
-            // ps.setDouble(7, newEmployee.getPayroll().getStateTax());
-            // ps.setDouble(8, newEmployee.getPayroll().getRetire401k());
-            // ps.setDouble(9, newEmployee.getPayroll().getHealthCare());
-            // ps.setInt(10, empID);
-            // ps.executeUpdate();
-            // System.out.println("Executed Payroll update");
-
-            // sqlCommand = "INSERT INTO address (empid, gender, pronouns, identified_race, dob, mobile_phone, city_id, state_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            // ps = myConn.prepareStatement(sqlCommand);
-            // ps.setInt(1, empID);
-            // ps.setString(2, newEmployee.getAddress().getGender());
-            // ps.setString(3, newEmployee.getAddress().getPronouns());
-            // ps.setString(4, newEmployee.getAddress().getIdentifiedRace());
-            // ps.setDate(5, newEmployee.getAddress().getDob());
-            // ps.setString(6, newEmployee.getAddress().getPhone());
-            // ps.setInt(7, newEmployee.getAddress().getCityID());
-            // ps.setInt(8, newEmployee.getAddress().getStateID());
-            // ps.executeUpdate();
-            // System.out.println("Executed Address update");
 
             employees.put(empID, newEmployee);
             myConn.close();
@@ -291,35 +286,6 @@ public class Admin {
         }
     }
 
-    // private Division createDivision() {
-    //     // Ask user to select appropriate division and retrieve ID
-    //     // HashMap<Integer, String> map = new HashMap<>();
-    //     // map.put(1, "Technology Engineering");
-    //     // map.put(2, "Marketing");
-    //     // map.put(3, "Human Resources");
-    //     // map.put(4, "HQ");
-    //     Division division = new Division();
-    //     System.out.println("Select a Division (1 - 4)");
-    //     System.out.println(division.getDivisionsMap());
-    //     division.setDivisionID(validateDivisionInput());
-    //     // automatically set division name according to division ID
-    //     // division.setName(map.get(input));
-    //     System.out.println("What is the Divison City? ");
-    //     scanner.nextLine();
-    //     division.setCity(validateStringInput());
-    //     System.out.println("What is the Divison Address 1? ");
-    //     division.setAddressLine1(validateStringInput());
-    //     System.out.println("What is the Divison Address 2? ");
-    //     division.setAddressLine2(validateStringInput());
-    //     System.out.println("What is the Divison State? ");
-    //     division.setState(validateStringInput());
-    //     System.out.println("What is the Divison Country? ");
-    //     division.setCountry(validateStringInput());
-    //     System.out.println("What is the Divison Postal Code? ");
-    //     division.setPostalCode(validateStringInput());
-    //     return division;
-    // }
-
     public void addPayroll() {
         Payroll payroll = createPayroll();
 
@@ -381,6 +347,32 @@ public class Admin {
         payroll.setEmpID(validateIntegerInput());
         // set payroll.setEmpID
         return payroll;
+    }
+
+    public void getTotalPayByJobTitle() {
+        displayJobSelection();
+        System.out.println();
+        System.out.print("Select Job Title (Enter ID): ");
+        int jobID = validateIntegerInput();
+        try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+            Statement myStmt = myConn.createStatement();
+            String query = "SELECT e.* FROM employees e LEFT JOIN ";
+            ResultSet rs = myStmt.executeQuery(query);
+
+            while (rs.next()) {
+                Job job = new Job();
+                job.setJobID(rs.getInt("job_title_id"));
+                job.setTitle(rs.getString("job_title"));
+
+                jobs.put(job.getJobID(), job);
+            }
+        } catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+    }
+
+    public void getTotalPayByMonthByJob(int month, String job_title) {
+
     }
 
     private Address createAddress() {
