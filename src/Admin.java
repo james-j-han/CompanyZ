@@ -9,8 +9,9 @@ public class Admin {
     private String user = "root";
     private String password = "Yessica6446!";
     private HashMap<Integer, Employee> employees;
-    private HashMap<Integer, Division> divisions;
     private HashMap<Integer, Job> jobs;
+    private HashMap<Integer, Division> divisions;
+    // private HashMap<Integer, Payroll> payrolls;
     private Scanner scanner;
     
     public Admin() {
@@ -20,8 +21,9 @@ public class Admin {
     private void init() {
         // Map empID to employee object
         employees = new HashMap<>();
-        divisions = new HashMap<>();
         jobs = new HashMap<>();
+        divisions = new HashMap<>();
+        // payrolls = new HashMap<>();
         scanner = new Scanner(System.in);
 
         // Initialize jobs locally
@@ -64,7 +66,32 @@ public class Admin {
             System.out.println("ERROR " + e.getLocalizedMessage());
         }
 
-        queryTester();
+        // Initialize payrolls locally
+        // No unique ID to store in HashMap... retrieve from DB instead
+        // try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+        //     Statement myStmt = myConn.createStatement();
+        //     String query = "SELECT * FROM payroll";
+        //     ResultSet rs = myStmt.executeQuery(query);
+
+        //     while (rs.next()) {
+        //         Payroll payroll = new Payroll();
+        //         payroll.setPayID(rs.getInt("payID"));
+        //         payroll.setPayDate(rs.getDate("pay_date"));
+        //         payroll.setEarnings(rs.getDouble("earnings"));
+        //         payroll.setFedTax(rs.getDouble("fed_tax"));
+        //         payroll.setFedMed(rs.getDouble("fed_med"));
+        //         payroll.setFedSS(rs.getDouble("fed_SS"));
+        //         payroll.setStateTax(rs.getDouble("state_tax"));
+        //         payroll.setRetire401k(rs.getDouble("retire_401k"));
+        //         payroll.setHealthCare(rs.getDouble("health_care"));
+        //         payroll.setEmpID(rs.getInt("empid"));
+
+        //         payrolls.put(payroll.getPayID(), payroll);
+        //     }
+        // } catch (Exception e) {
+        //     System.out.println("ERROR " + e.getLocalizedMessage());
+        // }
+        // queryTester();
                 
         // Initial DB connection to store all information locally
         try (Connection myConn = DriverManager.getConnection(url, user, password)) 
@@ -130,9 +157,8 @@ public class Admin {
 
     public void addEmployee() {
         Employee newEmployee = createEmployee();
-        // newEmployee.setDivision(createDivision());
-        newEmployee.setPayroll(createPayroll());
-        newEmployee.setAddress(createAddress());
+        // newEmployee.setPayroll(createPayroll());
+        // newEmployee.setAddress(createAddress());
         int empID;
 
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
@@ -152,6 +178,17 @@ public class Admin {
             System.out.println("Getting ResultSet");
             empID = rs.getInt(1);
 
+            sqlCommand = "INSERT INTO employee_job_titles (empid, job_title_id) VALUES (?, ?)";
+            ps = myConn.prepareStatement(sqlCommand);
+            ps.setInt(1, empID);
+            ps.setInt(2, newEmployee.getJobID());
+            ps.executeUpdate();
+
+            sqlCommand = "INSERT INTO employee_division (empid, div_ID) VALUES (?, ?)";
+            ps = myConn.prepareStatement(sqlCommand);
+            ps.setInt(1, empID);
+            ps.setInt(2, newEmployee.getDivID());
+            ps.executeUpdate();
             // sqlCommand = "INSERT INTO division (ID, Name, city, addressLine1, addressLine2, state, country, postalCode) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
             // ps = myConn.prepareStatement(sqlCommand);
             // ps.setInt(1, newEmployee.getDivision().getDivisionID());
@@ -165,33 +202,33 @@ public class Admin {
             // ps.executeUpdate();
             // System.out.println("Executed Division update");
 
-            sqlCommand = "INSERT INTO payroll (payID, pay_date, earnings, fed_tax, fed_med, fed_SS, state_tax, retire_401k, health_care, empID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            ps = myConn.prepareStatement(sqlCommand);
-            ps.setInt(1, newEmployee.getPayroll().getPayID());
-            ps.setDate(2, newEmployee.getPayroll().getPayDate());
-            ps.setDouble(3, newEmployee.getPayroll().getEarnings());
-            ps.setDouble(4, newEmployee.getPayroll().getFedTax());
-            ps.setDouble(5, newEmployee.getPayroll().getFedMed());
-            ps.setDouble(6, newEmployee.getPayroll().getFedSS());
-            ps.setDouble(7, newEmployee.getPayroll().getStateTax());
-            ps.setDouble(8, newEmployee.getPayroll().getRetire401k());
-            ps.setDouble(9, newEmployee.getPayroll().getHealthCare());
-            ps.setInt(10, empID);
-            ps.executeUpdate();
-            System.out.println("Executed Payroll update");
+            // sqlCommand = "INSERT INTO payroll (payID, pay_date, earnings, fed_tax, fed_med, fed_SS, state_tax, retire_401k, health_care, empID) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            // ps = myConn.prepareStatement(sqlCommand);
+            // ps.setInt(1, newEmployee.getPayroll().getPayID());
+            // ps.setDate(2, newEmployee.getPayroll().getPayDate());
+            // ps.setDouble(3, newEmployee.getPayroll().getEarnings());
+            // ps.setDouble(4, newEmployee.getPayroll().getFedTax());
+            // ps.setDouble(5, newEmployee.getPayroll().getFedMed());
+            // ps.setDouble(6, newEmployee.getPayroll().getFedSS());
+            // ps.setDouble(7, newEmployee.getPayroll().getStateTax());
+            // ps.setDouble(8, newEmployee.getPayroll().getRetire401k());
+            // ps.setDouble(9, newEmployee.getPayroll().getHealthCare());
+            // ps.setInt(10, empID);
+            // ps.executeUpdate();
+            // System.out.println("Executed Payroll update");
 
-            sqlCommand = "INSERT INTO address (empid, gender, pronouns, identified_race, dob, mobile_phone, city_id, state_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            ps = myConn.prepareStatement(sqlCommand);
-            ps.setInt(1, empID);
-            ps.setString(2, newEmployee.getAddress().getGender());
-            ps.setString(3, newEmployee.getAddress().getPronouns());
-            ps.setString(4, newEmployee.getAddress().getIdentifiedRace());
-            ps.setDate(5, newEmployee.getAddress().getDob());
-            ps.setString(6, newEmployee.getAddress().getPhone());
-            ps.setInt(7, newEmployee.getAddress().getCityID());
-            ps.setInt(8, newEmployee.getAddress().getStateID());
-            ps.executeUpdate();
-            System.out.println("Executed Address update");
+            // sqlCommand = "INSERT INTO address (empid, gender, pronouns, identified_race, dob, mobile_phone, city_id, state_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            // ps = myConn.prepareStatement(sqlCommand);
+            // ps.setInt(1, empID);
+            // ps.setString(2, newEmployee.getAddress().getGender());
+            // ps.setString(3, newEmployee.getAddress().getPronouns());
+            // ps.setString(4, newEmployee.getAddress().getIdentifiedRace());
+            // ps.setDate(5, newEmployee.getAddress().getDob());
+            // ps.setString(6, newEmployee.getAddress().getPhone());
+            // ps.setInt(7, newEmployee.getAddress().getCityID());
+            // ps.setInt(8, newEmployee.getAddress().getStateID());
+            // ps.executeUpdate();
+            // System.out.println("Executed Address update");
 
             employees.put(empID, newEmployee);
             myConn.close();
@@ -203,32 +240,55 @@ public class Admin {
     private Employee createEmployee() {
         Employee newEmployee = new Employee();
         Calendar calendar = Calendar.getInstance();
-        // System.out.println("What is the Job Title? ");
-        // newEmployee.setTitle(validateStringInput());
-        System.out.println("What is the First Name? ");
+        displayJobSelection();
+        System.out.println();
+        System.out.print("What is the Job Title? (Enter ID) ");
+        newEmployee.setJobID(validateIntegerInput());
+        System.out.println();
+        scanner.nextLine();
+        displayDivisionSelection();
+        System.out.println();
+        System.out.print("What is the Division Name? (Enter ID) ");
+        newEmployee.setDivID(validateIntegerInput());
+        System.out.println();
+        scanner.nextLine();
+        System.out.print("What is the First Name? ");
         newEmployee.setFirstName(validateStringInput());
-        System.out.println("What is the Last Name? ");
+        System.out.print("What is the Last Name? ");
         newEmployee.setLastName(validateStringInput());
-        System.out.println("What is the Email? ");
+        System.out.print("What is the Email? ");
         newEmployee.setEmail(validateStringInput());
-        System.out.println("What is the Hire Date? Enter Month: ");
+        System.out.print("What is the Hire Date? Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
         calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
-        System.out.println("What is the Hire Date? Enter Day: ");
+        System.out.print("What is the Hire Date? Enter Day: ");
         calendar.set(Calendar.DATE, validateIntegerInput());
-        System.out.println("What is the Hire Date? Enter Year: ");
+        System.out.print("What is the Hire Date? Enter Year: ");
         calendar.set(Calendar.YEAR, validateIntegerInput());
         Date date = new Date(calendar.getTimeInMillis());
         newEmployee.setHireDate(date);
-        System.out.println("What is the Salary? ");
+        System.out.print("What is the Salary? ");
         newEmployee.setSalary(validateDoubleInput());
-        System.out.println("What is the SSN (no dashes)? ");
+        System.out.print("What is the SSN (no dashes)? ");
         // first validate SSN is numerical, then convert to String
         newEmployee.setSsn(String.valueOf(validateLongInput()));
+        
         // for testing purposes, need to read nextLine() to wait for input before print
         // scanner.nextLine();
         // System.out.println(date);
         return newEmployee;
+    }
+
+    private void displayJobSelection() {
+        for (Job job : jobs.values()) {
+            System.out.println("Job ID: " + job.getJobID() + ": " + job.getTitle());
+        }
+    }
+
+    private void displayDivisionSelection() {
+        for (Division div : divisions.values()) {
+            System.out.println("Division ID: " + div.getDivisionID() + ": " + div.getName());
+        }
     }
 
     // private Division createDivision() {
@@ -260,36 +320,65 @@ public class Admin {
     //     return division;
     // }
 
+    public void addPayroll() {
+        Payroll payroll = createPayroll();
+
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "INSERT INTO payroll (payID, pay_date, earnings, fed_tax, fed_med, fed_SS, state_tax, retire_401k, health_care, empid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand, Statement.RETURN_GENERATED_KEYS);
+            ps.setInt(1, payroll.getPayID());
+            ps.setDate(2, payroll.getPayDate());
+            ps.setDouble(3, payroll.getEarnings());
+            ps.setDouble(4, payroll.getFedTax());
+            ps.setDouble(5, payroll.getFedMed());
+            ps.setDouble(6, payroll.getFedSS());
+            ps.setDouble(7, payroll.getStateTax());
+            ps.setDouble(8, payroll.getRetire401k());
+            ps.setDouble(9, payroll.getHealthCare());
+            ps.setInt(10, payroll.getEmpID());
+            ps.executeUpdate();
+            System.out.println("Executed adding payroll");
+
+            // employees.put(empID, newEmployee);
+            myConn.close();
+        } catch (Exception e) {
+            System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+    }
+
     private Payroll createPayroll() {
         Payroll payroll = new Payroll();
         Calendar calendar = Calendar.getInstance();
-        // figure out what payID is...
-        System.out.println("What is the Pay ID? ");
+        // payID is auto incremented based on current value tied with empID
+        System.out.print("What is the Pay ID? ");
         payroll.setPayID(validateIntegerInput());
-        System.out.println("What is the Pay Date? Enter Month: ");
+        System.out.print("What is the Pay Date? Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
         calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
-        System.out.println("What is the Pay Date? Enter Day: ");
+        System.out.print("What is the Pay Date? Enter Day: ");
         calendar.set(Calendar.DATE, validateIntegerInput());
-        System.out.println("What is the Pay Date? Enter Year: ");
+        System.out.print("What is the Pay Date? Enter Year: ");
         calendar.set(Calendar.YEAR, validateIntegerInput());
         Date date = new Date(calendar.getTimeInMillis());
         
         payroll.setPayDate(date);
-        System.out.println("What is the Earnings? ");
+        System.out.print("What is the Earnings? ");
         payroll.setEarnings(validateDoubleInput());
-        System.out.println("What is the Federal Tax? ");
+        System.out.print("What is the Federal Tax? ");
         payroll.setFedTax(validateDoubleInput());
-        System.out.println("What is the Federal Med? ");
+        System.out.print("What is the Federal Med? ");
         payroll.setFedMed(validateDoubleInput());
-        System.out.println("What is the Federal SS? ");
+        System.out.print("What is the Federal SS? ");
         payroll.setFedSS(validateDoubleInput());
-        System.out.println("What is the State Tax? ");
+        System.out.print("What is the State Tax? ");
         payroll.setStateTax(validateDoubleInput());
-        System.out.println("What is the Retire 401k? ");
+        System.out.print("What is the Retire 401k? ");
         payroll.setRetire401k(validateDoubleInput());
-        System.out.println("What is the Health Care? ");
+        System.out.print("What is the Health Care? ");
         payroll.setHealthCare(validateDoubleInput());
+        System.out.print("What is the Employee ID? ");
+        payroll.setEmpID(validateIntegerInput());
         // set payroll.setEmpID
         return payroll;
     }

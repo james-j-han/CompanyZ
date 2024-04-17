@@ -10,6 +10,7 @@ public class Payroll {
     private double stateTax;
     private double retire401k;
     private double healthCare;
+    private int empID;
 
     public Payroll() {
 
@@ -85,5 +86,13 @@ public class Payroll {
 
     public void setHealthCare(double healthCare) {
         this.healthCare = healthCare;
+    }
+
+    public int getEmpID() {
+        return empID;
+    }
+
+    public void setEmpID(int empID) {
+        this.empID = empID;
     }
 }

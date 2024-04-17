@@ -11,7 +11,6 @@ public class Employee {
     private String ssn;
     private int jobID;
     private int divID;
-    // private Division division;
     private Payroll payroll;
     private Address address;
 
@@ -90,14 +89,6 @@ public class Employee {
     public void setDivID(int divID) {
         this.divID = divID;
     }
-
-    // public Division getDivision() {
-    //     return division;
-    // }
-
-    // public void setDivision(Division division) {
-    //     this.division = division;
-    // }
 
     public Payroll getPayroll() {
         return payroll;
