@@ -1,6 +1,6 @@
 import java.sql.Date;
 
-public class Employee extends Job {
+public class Employee {
     
     private int empID;
     private String firstName;
@@ -9,12 +9,14 @@ public class Employee extends Job {
     private Date hireDate;
     private double salary;
     private String ssn;
-    private Division division;
+    private int jobID;
+    private int divID;
+    // private Division division;
     private Payroll payroll;
     private Address address;
 
     public Employee() {
-        super("");
+        
     }
 
     public int getEmpID() {
@@ -73,13 +75,29 @@ public class Employee extends Job {
         this.ssn = ssn;
     }
 
-    public Division getDivision() {
-        return division;
+    public int getJobID() {
+        return jobID;
     }
 
-    public void setDivision(Division division) {
-        this.division = division;
+    public void setJobID(int jobID) {
+        this.jobID = jobID;
     }
+
+    public int getDivID() {
+        return divID;
+    }
+
+    public void setDivID(int divID) {
+        this.divID = divID;
+    }
+
+    // public Division getDivision() {
+    //     return division;
+    // }
+
+    // public void setDivision(Division division) {
+    //     this.division = division;
+    // }
 
     public Payroll getPayroll() {
         return payroll;
