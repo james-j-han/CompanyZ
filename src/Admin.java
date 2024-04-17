@@ -184,6 +184,32 @@ public class Admin {
         // }
     }
 
+    public boolean displayMenu() {
+        System.out.println("What would you like to do?");
+        System.out.println("1: Employee Information with Pay Statement History");
+        System.out.println("2: Total Pay for Month by Job Title");
+        System.out.println("3: Total Pay for Month by Division");
+        System.out.println("1: Employee Information with Pay Statement History");
+        System.out.println("1: Employee Information with Pay Statement History");
+        System.out.println("1: Employee Information with Pay Statement History");
+        int option = validateIntegerInput();
+
+        switch (option) {
+            case 1:
+                System.out.println("You chose option " + option);
+                break;
+            case 2:
+                getTotalPayForMonthByJobTitle();
+                break;
+            case 3:
+                getTotalPayForMonthByDivision();
+                break;
+            case 4:
+                return false;
+        }
+        return true;
+    }
+
     public HashMap<Integer, Employee> getEmployees() {
         return employees;
     }
@@ -360,7 +386,7 @@ public class Admin {
         return payroll;
     }
 
-    public void getTotalPayByJobTitle() {
+    private void getTotalPayForMonthByJobTitle() {
         displayJobSelection();
         System.out.println();
         System.out.print("Select Job Title (Enter ID): ");
@@ -386,7 +412,7 @@ public class Admin {
         double totalPay = 0;
         String job_title = "";
         for (int empID : employee_job_titles.keySet()) {
-            int job_title_id = employee_job_titles.get(empID);
+            int job_title_id = employee_job_titles.getOrDefault(empID, 0);
             if (jobID == job_title_id) {
                 job_title = jobs.get(jobID).getTitle();
                 for (int eID : payrolls.keySet()) {
@@ -406,8 +432,51 @@ public class Admin {
         System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + job_title + ": $" + totalPay);
     }
 
-    public void getTotalPayByMonthByJob(int month, String job_title) {
+    private void getTotalPayForMonthByDivision() {
+        displayDivisionSelection();
+        System.out.println();
+        System.out.print("Select Division (Enter ID): ");
+        int divID = validateIntegerInput();
 
+        Calendar calendar = Calendar.getInstance();
+        System.out.println("Select a date range");
+        System.out.print("Enter starting month: ");
+        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        System.out.print("Enter starting day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.print("Enter starting year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date startDate = new Date(calendar.getTimeInMillis());
+
+        System.out.print("Enter ending month: ");
+        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        System.out.print("Enter ending day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.print("Enter ending year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date endDate = new Date(calendar.getTimeInMillis());
+        double totalPay = 0;
+        String divName = "";
+
+        for (int empID : employee_division.keySet()) {
+            int div_id = employee_division.getOrDefault(empID, 0);
+
+            if (divID == div_id) {
+                divName = divisions.get(divID).getName();
+                for (int eID : payrolls.keySet()) {
+                    if (empID == eID) {
+                        List<Payroll> p = payrolls.get(eID);
+                        for (Payroll pr : p) {
+                            if (pr.getPayDate().after(startDate) && pr.getPayDate().before(endDate)) {
+                                totalPay += pr.getEarnings();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + divName + ": $" + totalPay);
     }
 
     private Address createAddress() {
