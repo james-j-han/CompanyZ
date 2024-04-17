@@ -8,6 +8,7 @@ public class CompanyZ {
         // for (Payroll p : admin.getEmployees().get(1).getPayrollList()) {
         //     System.out.println(p.getEarnings());
         // }
+        admin.getTotalPayByJobTitle();
 
         // if (test == null) {
         //     System.out.println("There is no employee with ID: " + empID);

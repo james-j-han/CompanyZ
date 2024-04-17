@@ -167,9 +167,9 @@ public class Admin {
                 payroll.setEmpID(rs.getInt("empid"));
 
                 if (!payrolls.containsKey(payroll.getEmpID())) {
-                    List<Payroll> list = new ArrayList<>();
-                    list.add(payroll);
-                    payrolls.put(payroll.getEmpID(), list);
+                    List<Payroll> l = new ArrayList<>();
+                    l.add(payroll);
+                    payrolls.put(payroll.getEmpID(), l);
                 } else {
                     payrolls.get(payroll.getEmpID()).add(payroll);
                 }
@@ -178,6 +178,10 @@ public class Admin {
         }  catch (Exception e) {
             System.out.println("ERROR " + e.getLocalizedMessage());
         }
+
+        // for (List<Payroll> l : payrolls.values()) {
+        //     System.out.println(l.size());
+        // }
     }
 
     public HashMap<Integer, Employee> getEmployees() {
@@ -306,7 +310,14 @@ public class Admin {
             ps.executeUpdate();
             System.out.println("Executed adding payroll");
 
-            // employees.put(empID, newEmployee);
+            if (!payrolls.containsKey(payroll.getEmpID())) {
+                List<Payroll> l = new ArrayList<>();
+                l.add(payroll);
+                payrolls.put(payroll.getEmpID(), l);
+            } else {
+                payrolls.get(payroll.getEmpID()).add(payroll);
+            }
+            
             myConn.close();
         } catch (Exception e) {
             System.out.println("ERROR " + e.getLocalizedMessage());
@@ -354,21 +365,45 @@ public class Admin {
         System.out.println();
         System.out.print("Select Job Title (Enter ID): ");
         int jobID = validateIntegerInput();
-        try (Connection myConn = DriverManager.getConnection(url, user, password)) {
-            Statement myStmt = myConn.createStatement();
-            String query = "SELECT e.* FROM employees e LEFT JOIN ";
-            ResultSet rs = myStmt.executeQuery(query);
 
-            while (rs.next()) {
-                Job job = new Job();
-                job.setJobID(rs.getInt("job_title_id"));
-                job.setTitle(rs.getString("job_title"));
+        Calendar calendar = Calendar.getInstance();
+        System.out.println("Select a date range");
+        System.out.print("Enter starting month: ");
+        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        System.out.print("Enter starting day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.print("Enter starting year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date startDate = new Date(calendar.getTimeInMillis());
 
-                jobs.put(job.getJobID(), job);
+        System.out.print("Enter ending month: ");
+        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        System.out.print("Enter ending day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.print("Enter ending year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date endDate = new Date(calendar.getTimeInMillis());
+        double totalPay = 0;
+        String job_title = "";
+        for (int empID : employee_job_titles.keySet()) {
+            int job_title_id = employee_job_titles.get(empID);
+            if (jobID == job_title_id) {
+                job_title = jobs.get(jobID).getTitle();
+                for (int eID : payrolls.keySet()) {
+                    if (empID == eID) {
+                        List<Payroll> p = payrolls.get(eID);
+                        for (Payroll pr : p) {
+                            if (pr.getPayDate().after(startDate) && pr.getPayDate().before(endDate)) {
+                                totalPay += pr.getEarnings();
+
+                            }
+                        }
+                    }
+                }
             }
-        } catch (Exception e) {
-            System.out.println("ERROR " + e.getLocalizedMessage());
         }
+
+        System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + job_title + ": $" + totalPay);
     }
 
     public void getTotalPayByMonthByJob(int month, String job_title) {
@@ -404,6 +439,24 @@ public class Admin {
         System.out.println("What is the State ID? ");
         address.setStateID(validateIntegerInput());
         return address;
+    }
+
+    private int validateMonthInput() {
+        int input = 0;
+        boolean valid = true;
+        while (valid) {
+            try {
+                input = scanner.nextInt();
+                if (input >= 1 && input <= 12) {
+                    valid = false;
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                scanner.nextLine();
+            }
+        }
+        return input;
     }
 
     private String validateStringInput() {
