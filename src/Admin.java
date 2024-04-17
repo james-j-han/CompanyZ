@@ -7,9 +7,9 @@ import java.util.Scanner;
 
 public class Admin {
 
-    private String url = "jdbc:mysql://localhost:3306/employeeData";
-    private String user = "root";
-    private String password = "Yessica6446!";
+    private static String url = "jdbc:mysql://localhost:3306/employeeData";
+    private static String user = "root";
+    private static String password = "Yessica6446!";
     private HashMap<Integer, Employee> employees;
     private HashMap<Integer, Job> jobs;
     private HashMap<Integer, Integer> employee_job_titles;
@@ -191,15 +191,17 @@ public class Admin {
         System.out.println("2: Get Total Pay for Month by Job Title");
         System.out.println("3: Get Total Pay for Month by Division");
         System.out.println("4: Search for an employee");
-        System.out.println("1: Employee Information with Pay Statement History");
-        System.out.println("1: Employee Information with Pay Statement History");
+        System.out.println("5: Update an employee's data");
+        System.out.println("6: Add a new employee");
+        System.out.println("7: Delete an employee");
+        System.out.println("8: Update employee's salary by percentage within a range");
         int option = validateIntegerInput();
 
         switch (option) {
             case 0:
                 return false;
             case 1:
-                System.out.println("You chose option " + option);
+                System.out.println("You selected to get employee information with pay statement history");
                 break;
             case 2:
                 getTotalPayForMonthByJobTitle();
@@ -209,6 +211,18 @@ public class Admin {
                 break;
             case 4:
                 searchEmployee();
+                break;
+            case 5:
+                updateEmployeeData();
+                break;
+            case 6:
+                System.out.println("You selected to add a new employee");
+                break;
+            case 7:
+                System.out.println("You selected to delete an employee");
+                break;
+            case 8:
+                System.out.println("You selected to update employee's salary by percentage within a range");
                 break;
         }
         return true;
@@ -486,7 +500,7 @@ public class Admin {
     private Address createAddress() {
         Address address = new Address();
         Calendar calendar = Calendar.getInstance();
-        // set address.setEmpID
+        
         System.out.println("What is the Gender (M or F)? ");
         scanner.nextLine();
         address.setGender(validateStringInput());
@@ -614,32 +628,27 @@ public class Admin {
         return input;
     }
 
-    private void searchEmployee() {
+    private Employee searchEmployee() {
         System.out.println("Select an option");
         System.out.println("1: Search by employee ID");
         System.out.println("2: Search by employee SSN");
         System.out.println("3: Search by employee NAME");
         int option = validateSearchInput();
+        Employee e = null;
 
         switch (option) {
             case 1:
-                getEmployeeByID();
+                e = getEmployeeByID();
                 break;
             case 2:
-                getEmployeeBySSN();
+                e = getEmployeeBySSN();
                 break;
             case 3:
-                getEmployeeByName();
+                e = getEmployeeByName();
                 break;
         }
-    }
 
-    private void getEmployeeByID() {
-        System.out.print("Enter employee's ID: ");
-        int empID = validateIntegerInput();
-        Employee e = employees.getOrDefault(empID, null);
         if (e != null) {
-            System.out.println("Employee with ID: " + empID);
             System.out.println("Employee ID: " + e.getEmpID());
             System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
             System.out.println("Email: " + e.getEmail());
@@ -647,97 +656,211 @@ public class Admin {
             System.out.println("Salary: $" + e.getSalary());
             System.out.println("SSN: " + e.getSsn());
         } else {
-            System.out.println(String.format("Employee with ID: %d does not exist", empID));
+            System.out.println(String.format("Employee not found"));
         }
+        return e;
+    }
+
+    private Employee getEmployeeByID() {
+        System.out.print("Enter employee's ID: ");
+        int empID = validateIntegerInput();
+        return employees.getOrDefault(empID, null);
     }
     
-    private void getEmployeeBySSN() {
+    private Employee getEmployeeBySSN() {
         System.out.print("Enter employee's SSN: ");
         scanner.nextLine();
         String ssn = validateStringInput();
         Employee e = null;
         for (Employee employee : employees.values()) {
             if (ssn.equals(employee.getSsn())) {
-                e = employee;
-                break;
+                return employee;
             }
         }
-        if (e != null) {
-            System.out.println("Employee with SSN: " + ssn);
-            System.out.println("Employee ID: " + e.getEmpID());
-            System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
-            System.out.println("Email: " + e.getEmail());
-            System.out.println("Hire Date: " + e.getHireDate());
-            System.out.println("Salary: $" + e.getSalary());
-            System.out.println("SSN: " + e.getSsn());
-        } else {
-            System.out.println(String.format("Employee with SSN: %s does not exist", ssn));
-        }
+        return null;
     }
 
-    private void getEmployeeByName() {
+    private Employee getEmployeeByName() {
         System.out.println("Enter employee's Name: ");
         scanner.nextLine();
         String name = validateStringInput();
         for (Employee e : employees.values()) {
             String empName = e.getFirstName() + " " + e.getLastName();
             if (empName.toLowerCase().contains(name.toLowerCase())) {
-                System.out.println("Employee with NAME: " + name);
-                System.out.println("Employee ID: " + e.getEmpID());
-                System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
-                System.out.println("Email: " + e.getEmail());
-                System.out.println("Hire Date: " + e.getHireDate());
-                System.out.println("Salary: $" + e.getSalary());
-                System.out.println("SSN: " + e.getSsn());
-                return;
+                return e;
             }
         }
-        System.out.println(String.format("Employee with NAME: %s does not exist", name));
+        return null;
     }
 
-    // Test case 'a': update employee data
-    public void updateEmployeeSSN(int empid, String ssn) {
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            // Prepared statement to avoid SQL injection
-            String query = "UPDATE employees SET ssn = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(query);
-            // Note: ? index starts at 1 and must be in order
-            ps.setString(1, ssn);
-            ps.setInt(2, empid);
-            ps.executeUpdate();
-            myConn.close();
-        } 
-        catch (Exception e) 
-        {
-            System.out.println("ERROR " + e.getLocalizedMessage());
+    private void updateEmployeeData() {
+        System.out.println("What would you like to update?");
+        System.out.println("1: First Name");
+        System.out.println("2: Last Name");
+        System.out.println("3: Email");
+        System.out.println("4: Hire Date");
+        System.out.println("5: Salary");
+        System.out.println("6: SSN");
+        int option = validateIntegerInput();
+
+        switch (option) {
+            case 1:
+                updateEmployeeFirstName();
+                break;
+            case 2:
+                updateEmployeeLastName();
+                break;
+            case 3:
+                updateEmployeeEmail();
+                break;
+            case 4:
+                updateEmployeeHireDate();
+                break;
+            case 5:
+                updateEmployeeSalary();
+                break;
+            case 6:
+                updateEmployeeSSN();
+                break;
         }
-        // PASS: must handle edge cases
-        // Implement updating of data for other fields
-        // Also need to update local variable if update query is successful
     }
 
-    // Test case 'c': update salary for all employees less than constraint
-    public void updateAllSalariesLessThan(int newAmount, int constraint) {
+    private void updateEmployeeFirstName() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        System.out.print("What is the new First Name? ");
+        scanner.nextLine();
+        String newValue = validateStringInput();
+        
         try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
-            // O(n)
-            for (Employee e : employees.values()) {
-                // Check if salary is less than constraint
-                // Update salaries with newAmount
-            }
-            // Prepared statement to avoid SQL injection
-            String query = "UPDATE employees SET ssn = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(query);
-            // Note: ? index starts at 1 and must be in order
-            // ps.setString(1, ssn);
-            // ps.setInt(2, empid);
+            String sqlCommand = "UPDATE employees SET Fname = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setString(1, newValue);
+            ps.setInt(2, empID);
             ps.executeUpdate();
+
+            e.setFirstName(newValue);
             myConn.close();
-        } 
-        catch (Exception e) 
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
+        }
+    }
+
+    private void updateEmployeeLastName() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        System.out.print("What is the new Last Name? ");
+        scanner.nextLine();
+        String newValue = validateStringInput();
+        
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
         {
-            System.out.println("ERROR " + e.getLocalizedMessage());
+            String sqlCommand = "UPDATE employees SET Lname = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setString(1, newValue);
+            ps.setInt(2, empID);
+            ps.executeUpdate();
+
+            e.setLastName(newValue);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
+        }
+    }
+
+    private void updateEmployeeEmail() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        System.out.print("What is the new Email? ");
+        scanner.nextLine();
+        String newValue = validateStringInput();
+        
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "UPDATE employees SET email = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setString(1, newValue);
+            ps.setInt(2, empID);
+            ps.executeUpdate();
+
+            e.setEmail(newValue);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
+        }
+    }
+
+    private void updateEmployeeHireDate() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        Calendar calendar = Calendar.getInstance();
+        System.out.println("What is the new Hire Date? ");
+        System.out.print("Enter Month: ");
+        // Calendar.MONTH starts at index 0 = January ~ 11 = December
+        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        System.out.print("Enter Day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.print("Enter Year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date date = new Date(calendar.getTimeInMillis());
+        
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "UPDATE employees SET HireDate = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setDate(1, date);
+            ps.setInt(2, empID);
+            ps.executeUpdate();
+
+            e.setHireDate(date);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
+        }
+    }
+
+    private void updateEmployeeSalary() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        System.out.print("What is the new Salary? ");
+        scanner.nextLine();
+        double newValue = validateDoubleInput();
+        
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "UPDATE employees SET Salary = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setDouble(1, newValue);
+            ps.setInt(2, empID);
+            ps.executeUpdate();
+
+            e.setSalary(newValue);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
+        }
+    }
+
+    private void updateEmployeeSSN() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        System.out.print("What is the new SSN? ");
+        scanner.nextLine();
+        String newValue = validateStringInput();
+        
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "UPDATE employees SET ssn = ? WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setString(1, newValue);
+            ps.setInt(2, empID);
+            ps.executeUpdate();
+
+            e.setSsn(newValue);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
         }
     }
 
