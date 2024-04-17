@@ -194,7 +194,8 @@ public class Admin {
         System.out.println("5: Update an employee's data");
         System.out.println("6: Add a new employee");
         System.out.println("7: Delete an employee");
-        System.out.println("8: Update employee's salary by percentage within a range");
+        System.out.println("8: Increase employee salary by % if in range");
+        System.out.println("9: Update all employee's salary less than amount");
         int option = validateIntegerInput();
 
         switch (option) {
@@ -216,13 +217,16 @@ public class Admin {
                 updateEmployeeData();
                 break;
             case 6:
-                System.out.println("You selected to add a new employee");
+                addEmployee();
                 break;
             case 7:
-                System.out.println("You selected to delete an employee");
+                deleteEmployee();
                 break;
             case 8:
-                System.out.println("You selected to update employee's salary by percentage within a range");
+                System.out.println("You selected to update employee's salary by % if in range");
+                break;
+            case 9:
+                System.out.println("You selected to update all employee's salary less than amount");
                 break;
         }
         return true;
@@ -258,7 +262,7 @@ public class Admin {
             
             ResultSet rs = ps.getGeneratedKeys();
             rs.next();
-            System.out.println("Getting ResultSet");
+            // System.out.println("Getting ResultSet");
             empID = rs.getInt(1);
 
             sqlCommand = "INSERT INTO employee_job_titles (empid, job_title_id) VALUES (?, ?)";
@@ -277,6 +281,23 @@ public class Admin {
             myConn.close();
         } catch (Exception e) {
             System.out.println("ERROR " + e.getLocalizedMessage());
+        }
+    }
+
+    private void deleteEmployee() {
+        Employee e = searchEmployee();
+        int empID = e.getEmpID();
+        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        {
+            String sqlCommand = "DELETE FROM employees WHERE empid = ?";
+            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+            ps.setInt(1, empID);
+            ps.executeUpdate();
+
+            employees.remove(empID);
+            myConn.close();
+        } catch (Exception error) {
+            System.out.println("ERROR " + error.getLocalizedMessage());
         }
     }
 
