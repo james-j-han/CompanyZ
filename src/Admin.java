@@ -186,15 +186,18 @@ public class Admin {
 
     public boolean displayMenu() {
         System.out.println("What would you like to do?");
-        System.out.println("1: Employee Information with Pay Statement History");
-        System.out.println("2: Total Pay for Month by Job Title");
-        System.out.println("3: Total Pay for Month by Division");
-        System.out.println("1: Employee Information with Pay Statement History");
+        System.out.println("0: Quit");
+        System.out.println("1: Get Employee Information with Pay Statement History");
+        System.out.println("2: Get Total Pay for Month by Job Title");
+        System.out.println("3: Get Total Pay for Month by Division");
+        System.out.println("4: Search for an employee");
         System.out.println("1: Employee Information with Pay Statement History");
         System.out.println("1: Employee Information with Pay Statement History");
         int option = validateIntegerInput();
 
         switch (option) {
+            case 0:
+                return false;
             case 1:
                 System.out.println("You chose option " + option);
                 break;
@@ -205,7 +208,8 @@ public class Admin {
                 getTotalPayForMonthByDivision();
                 break;
             case 4:
-                return false;
+                searchEmployee();
+                break;
         }
         return true;
     }
@@ -592,34 +596,103 @@ public class Admin {
         return input;
     }
 
-    // Test case 'b': search for employee by empID
-    public Employee searchEmployee(int empID) {
-        // O(1)
-        Employee employee = employees.get(empID);
-        return employee;
-        // PASS: must handle null edge case
+    private int validateSearchInput() {
+        int input = 0;
+        boolean valid = true;
+        while (valid) {
+            try {
+                input = scanner.nextInt();
+                if (input >= 1 && input <= 3) {
+                    valid = false;
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                scanner.nextLine();
+            }
+        }
+        return input;
     }
 
-    // Test case 'b': search for employee by ssn
-    
-    // public Employee searchEmployee(String ssn) {
-    //     // O(n)
-    //     for (Employee e : employees.values()) {
-    //         if (e.getSsn().equals(ssn)) return e;
-    //     }
-    //     return null;
-    //     // PASS: although testing was limited, must handle edge cases
-    // }
+    private void searchEmployee() {
+        System.out.println("Select an option");
+        System.out.println("1: Search by employee ID");
+        System.out.println("2: Search by employee SSN");
+        System.out.println("3: Search by employee NAME");
+        int option = validateSearchInput();
 
-    // Test case 'b': search for employee by name
-    public Employee searchEmployee(String name) {
-        
-        // Case 1: first name only (possible duplicates)
-        // Case 2: last name only (possibly duplicates)
-        // Case 3: first and last name
-        // Handle each edge case
-        return null;
-        // NOT TESTED
+        switch (option) {
+            case 1:
+                getEmployeeByID();
+                break;
+            case 2:
+                getEmployeeBySSN();
+                break;
+            case 3:
+                getEmployeeByName();
+                break;
+        }
+    }
+
+    private void getEmployeeByID() {
+        System.out.print("Enter employee's ID: ");
+        int empID = validateIntegerInput();
+        Employee e = employees.getOrDefault(empID, null);
+        if (e != null) {
+            System.out.println("Employee with ID: " + empID);
+            System.out.println("Employee ID: " + e.getEmpID());
+            System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
+            System.out.println("Email: " + e.getEmail());
+            System.out.println("Hire Date: " + e.getHireDate());
+            System.out.println("Salary: $" + e.getSalary());
+            System.out.println("SSN: " + e.getSsn());
+        } else {
+            System.out.println(String.format("Employee with ID: %d does not exist", empID));
+        }
+    }
+    
+    private void getEmployeeBySSN() {
+        System.out.print("Enter employee's SSN: ");
+        scanner.nextLine();
+        String ssn = validateStringInput();
+        Employee e = null;
+        for (Employee employee : employees.values()) {
+            if (ssn.equals(employee.getSsn())) {
+                e = employee;
+                break;
+            }
+        }
+        if (e != null) {
+            System.out.println("Employee with SSN: " + ssn);
+            System.out.println("Employee ID: " + e.getEmpID());
+            System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
+            System.out.println("Email: " + e.getEmail());
+            System.out.println("Hire Date: " + e.getHireDate());
+            System.out.println("Salary: $" + e.getSalary());
+            System.out.println("SSN: " + e.getSsn());
+        } else {
+            System.out.println(String.format("Employee with SSN: %s does not exist", ssn));
+        }
+    }
+
+    private void getEmployeeByName() {
+        System.out.println("Enter employee's Name: ");
+        scanner.nextLine();
+        String name = validateStringInput();
+        for (Employee e : employees.values()) {
+            String empName = e.getFirstName() + " " + e.getLastName();
+            if (empName.toLowerCase().contains(name.toLowerCase())) {
+                System.out.println("Employee with NAME: " + name);
+                System.out.println("Employee ID: " + e.getEmpID());
+                System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
+                System.out.println("Email: " + e.getEmail());
+                System.out.println("Hire Date: " + e.getHireDate());
+                System.out.println("Salary: $" + e.getSalary());
+                System.out.println("SSN: " + e.getSsn());
+                return;
+            }
+        }
+        System.out.println(String.format("Employee with NAME: %s does not exist", name));
     }
 
     // Test case 'a': update employee data
