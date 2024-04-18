@@ -194,7 +194,7 @@ public class Admin {
     public boolean displayMenu() {
         System.out.println();
         System.out.println("Please select an option from the menu below");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("0: Quit");
         System.out.println("1: Get Employee Information with Pay Statement History");
         System.out.println("2: Get Total Pay for Month by Job Title");
@@ -211,7 +211,7 @@ public class Admin {
                 return false;
             case 1:
                 clearConsole();
-                System.out.println("You selected to get employee information with pay statement history");
+                displaySearchSelection(true);
                 break;
             case 2:
                 clearConsole();
@@ -223,7 +223,7 @@ public class Admin {
                 break;
             case 4:
                 clearConsole();
-                displaySearchSelection();
+                displaySearchSelection(false);
                 break;
             case 5:
                 clearConsole();
@@ -243,10 +243,10 @@ public class Admin {
         return true;
     }
 
-    private List<Employee> displaySearchSelection() {
+    private List<Employee> displaySearchSelection(boolean payHistory) {
         clearConsole();
         System.out.println("Select an option");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("1: Search by employee ID");
         System.out.println("2: Search by employee SSN");
         System.out.println("3: Search by employee NAME");
@@ -257,16 +257,16 @@ public class Admin {
 
         switch (option) {
             case 1:
-                e = getEmployee(getEmployeeByID());
+                e = getEmployee(getEmployeeByID(), payHistory);
                 break;
             case 2:
-                e = getEmployee(getEmployeeBySSN());
+                e = getEmployee(getEmployeeBySSN(), payHistory);
                 break;
             case 3:
-                e = getEmployee(getEmployeeByName());
+                e = getEmployee(getEmployeeByName(), payHistory);
                 break;
             case 4:
-                e = getEmployee(getEmployeeBySalary(displaySalarySelection()));
+                e = getEmployee(getEmployeeBySalary(displaySalarySelection()), payHistory);
                 break;
         }
         System.out.println();
@@ -276,7 +276,7 @@ public class Admin {
     private void displayUpdateSelection() {
         clearConsole();
         System.out.println("What would you like to update?");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("1: First Name");
         System.out.println("2: Last Name");
         System.out.println("3: Email");
@@ -303,7 +303,7 @@ public class Admin {
                 choice.put("batch", displayBatchUpdateSelection());
                 choice.put("fixed", displaySalaryAmountSelection());
                 choice.put("range", displaySalarySelection());
-                updateEmployeeSalary(getEmployee(getEmployeeBySalary(choice.get("range"))), choice.get("batch"), choice.get("fixed"));
+                updateEmployeeSalary(getEmployee(getEmployeeBySalary(choice.get("range")), false), choice.get("batch"), choice.get("fixed"));
                 // updateEmployeeSalary(displayBatchUpdateSelection());
                 break;
             case 6:
@@ -315,7 +315,7 @@ public class Admin {
     private boolean displaySalaryAmountSelection() {
         clearConsole();
         System.out.println("How would you like to update employee(s) salary?");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("1: Update by a fixed amount");
         System.out.println("2: Increase by a percentage");
         int option = validateIntegerInput(1, 2, true);
@@ -332,7 +332,7 @@ public class Admin {
     private boolean displaySalarySelection() {
         clearConsole();
         System.out.println("How would you like to select employee(s)?");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("1: Select employee with a salary amount");
         System.out.println("2: Select employee within salary range");
         int option = validateIntegerInput(1, 2, true);
@@ -349,7 +349,7 @@ public class Admin {
     private boolean displayBatchUpdateSelection() {
         clearConsole();
         System.out.println("How would you like to update each employee?");
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("1: Update all employees");
         System.out.println("2: Update per employee");
         int option = validateIntegerInput(1, 2, true);
@@ -364,14 +364,14 @@ public class Admin {
     }
 
     private void displayJobSelection() {
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         for (Job job : jobs.values()) {
             System.out.println("Job ID: " + job.getJobID() + ": " + job.getTitle());
         }
     }
 
     private void displayDivisionSelection() {
-        System.out.println("------------------------------------------------------");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         for (Division div : divisions.values()) {
             System.out.println("Division ID: " + div.getDivisionID() + ": " + div.getName());
         }
@@ -425,7 +425,7 @@ public class Admin {
 
                 newEmp.setEmpID(empID);
                 employees.put(empID, newEmp);
-                getEmployee(Arrays.asList(newEmp));
+                getEmployee(Arrays.asList(newEmp), false);
                 myConn.close();
             } catch (Exception e) {
                 System.out.println("ERROR " + e.getLocalizedMessage());
@@ -435,7 +435,7 @@ public class Admin {
 
     private void deleteEmployee() {
         clearConsole();
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         if (!employee.isEmpty()) {
             for (Employee e : employee) {
                 int empID = e.getEmpID();
@@ -807,15 +807,23 @@ public class Admin {
 
     // region SEARCH EMPLOYEE
 
-    private List<Employee> getEmployee(List<Employee> employee) {
+    private List<Employee> getEmployee(List<Employee> employee, boolean payHistory) {
         for (Employee e : employee) {
-            System.out.println("------------------------------------------------------");
+            System.out.println("---------------------------------------------------------------------------------------------------------");
             System.out.println("Employee ID : " + e.getEmpID());
             System.out.println("Full Name   : " + e.getFirstName() + " " + e.getLastName());
             System.out.println("Email       : " + e.getEmail());
             System.out.println("Hire Date   : " + e.getHireDate());
             System.out.println(String.format("Salary      : $%.2f", e.getSalary()));
             System.out.println("SSN         : " + e.getSsn());
+            if (payHistory) {
+                System.out.printf("%nPay Statement History for %s %s%n", e.getFirstName(), e.getLastName());
+                System.out.println("---------------------------------------------------------------------------------------------------------");
+                System.out.printf("| %-3s | %-10s | %-8s | %-8s | %-8s | %-8s | %-10s | %-11s | %-11s |%n", "ID", "PAY DATE", "EARNINGS", "FED TAX", "FED MED", "FED SS", "STATE TAX", "RETIRE 401K", "HEALTH CARE");
+                for (Payroll p : payrolls.get(e.getEmpID())) {
+                    System.out.printf("| %-3s | %-10s | %-8s | %-8s | %-8s | %-8s | %-10s | %-11s | %-11s |%n", p.getPayID(), p.getPayDate(), p.getEarnings(), p.getFedTax(), p.getFedMed(), p.getFedSS(), p.getStateTax(), p.getRetire401k(), p.getHealthCare());
+                }
+            }
         }
         return employee;
     }
@@ -907,7 +915,7 @@ public class Admin {
     
     private void updateEmployeeFirstName() {
         // clearConsole();
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s, what is the First Name? ", e.getFirstName(), e.getLastName()));
@@ -929,7 +937,7 @@ public class Admin {
     }
 
     private void updateEmployeeLastName() {
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s, what is the Last Name? ", e.getFirstName(), e.getLastName()));
@@ -951,7 +959,7 @@ public class Admin {
     }
 
     private void updateEmployeeEmail() {
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s with email %s, what is the Email? ", e.getFirstName(), e.getLastName(), e.getEmail()));
@@ -973,7 +981,7 @@ public class Admin {
     }
 
     private void updateEmployeeHireDate() {
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             Calendar calendar = Calendar.getInstance();
@@ -1103,7 +1111,7 @@ public class Admin {
     }
 
     private void updateEmployeeSSN() {
-        List<Employee> employee = displaySearchSelection();
+        List<Employee> employee = displaySearchSelection(false);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s with ssn %s, what is the SSN? ", e.getFirstName(), e.getLastName(), e.getSsn()));
