@@ -3,8 +3,6 @@ public class CompanyZ {
 
         Admin admin = new Admin();
         System.out.println("CompanyZ");
-        while (admin.displayMenu()) {
-
-        }
+        while (admin.displayMenu()) {}
     }
 }

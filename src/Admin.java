@@ -200,12 +200,12 @@ public class Admin {
         System.out.println("2: Get Total Pay for Month by Job Title");
         System.out.println("3: Get Total Pay for Month by Division");
         System.out.println("4: Search for employee(s)");
-        System.out.println("5: Update a employee(s)");
-        System.out.println("6: Add a employee(s)");
+        System.out.println("5: Update employee(s)");
+        System.out.println("6: Add employee(s)");
         System.out.println("7: Delete employee(s)");
         System.out.println("8: Increase employee salary by % if in range");
         System.out.println("9: Update all employee's salary less than amount");
-        int option = validateIntegerInput();
+        int option = validateIntegerInput(0, 9, true);
 
         switch (option) {
             case 0:
@@ -261,7 +261,7 @@ public class Admin {
         System.out.println("4: Hire Date");
         System.out.println("5: Salary");
         System.out.println("6: SSN");
-        int option = validateIntegerInput();
+        int option = validateIntegerInput(1, 6, true);
 
         switch (option) {
             case 1:
@@ -277,12 +277,46 @@ public class Admin {
                 updateEmployeeHireDate();
                 break;
             case 5:
-                updateEmployeeSalary();
+                updateEmployeeSalary(displayBatchUpdateSelection());
                 break;
             case 6:
                 updateEmployeeSSN();
                 break;
         }
+    }
+
+    private boolean displaySalarySelection() {
+        clearConsole();
+        System.out.println("Select an option");
+        System.out.println("------------------------------------------------------");
+        System.out.println("1: Update employee Salary with exact amount");
+        System.out.println("2: Update employee Salary within range");
+        int option = validateIntegerInput(1, 2, true);
+
+        switch (option) {
+            case 1:
+                return false;
+            case 2:
+                return true;
+        }
+        return false;
+    }
+
+    private boolean displayBatchUpdateSelection() {
+        clearConsole();
+        System.out.println("Select an option");
+        System.out.println("------------------------------------------------------");
+        System.out.println("1: Update all employees");
+        System.out.println("2: Update per employee");
+        int option = validateIntegerInput(1, 2, true);
+
+        switch (option) {
+            case 1:
+                return false;
+            case 2:
+                return true;
+        }
+        return false;
     }
 
     private void displayJobSelection() {
@@ -311,7 +345,7 @@ public class Admin {
     public void addEmployee() {
         clearConsole();
         System.out.print("How many employees would you like to add? ");
-        int numOfEmp = validateIntegerInput();
+        int numOfEmp = validateIntegerInput(0, 0, false);
 
         for (int i = 0; i < numOfEmp; i++) {
             System.out.println();
@@ -368,7 +402,6 @@ public class Admin {
                 PreparedStatement ps = myConn.prepareStatement(sqlCommand);
                 ps.setInt(1, empID);
                 ps.executeUpdate();
-                System.out.println("Delete from employee_division successful");
 
                 // delete employee
                 sqlCommand = "DELETE FROM employees WHERE empid = ?";
@@ -383,20 +416,6 @@ public class Admin {
                 System.out.println("ERROR " + error.getLocalizedMessage());
             }
         }
-        // Employee e = searchEmployee();
-        // int empID = e.getEmpID();
-        // try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        // {
-        //     String sqlCommand = "DELETE FROM employees WHERE empid = ?";
-        //     PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-        //     ps.setInt(1, empID);
-        //     ps.executeUpdate();
-
-        //     employees.remove(empID);
-        //     myConn.close();
-        // } catch (Exception error) {
-        //     System.out.println("ERROR " + error.getLocalizedMessage());
-        // }
     }
 
     // endregion
@@ -409,13 +428,13 @@ public class Admin {
         displayJobSelection();
         System.out.println();
         System.out.print("What is the Job Title? (Enter ID) ");
-        newEmployee.setJobID(validateIntegerInput());
+        newEmployee.setJobID(validateIntegerInput(0, 0, false));
         System.out.println();
         
         displayDivisionSelection();
         System.out.println();
         System.out.print("What is the Division Name? (Enter ID) ");
-        newEmployee.setDivID(validateIntegerInput());
+        newEmployee.setDivID(validateIntegerInput(0, 0, false));
         System.out.println();
         
         System.out.print("What is the First Name? ");
@@ -427,11 +446,11 @@ public class Admin {
         System.out.println("What is the Hire Date?");
         System.out.print("Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        calendar.set(Calendar.MONTH, validateIntegerInput(1, 12, true) - 1);
         System.out.print("Enter Day: ");
-        calendar.set(Calendar.DATE, validateIntegerInput());
+        calendar.set(Calendar.DATE, validateIntegerInput(1, 31, true));
         System.out.print("Enter Year: ");
-        calendar.set(Calendar.YEAR, validateIntegerInput());
+        calendar.set(Calendar.YEAR, validateIntegerInput(1900, 2024, true));
         Date date = new Date(calendar.getTimeInMillis());
         newEmployee.setHireDate(date);
         System.out.print("What is the Salary? ");
@@ -482,14 +501,14 @@ public class Admin {
         Calendar calendar = Calendar.getInstance();
         // payID is auto incremented based on current value tied with empID
         System.out.print("What is the Pay ID? ");
-        payroll.setPayID(validateIntegerInput());
+        payroll.setPayID(validateIntegerInput(0, 0, false));
         System.out.print("What is the Pay Date? Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        calendar.set(Calendar.MONTH, validateIntegerInput(1, 12, true) - 1);
         System.out.print("What is the Pay Date? Enter Day: ");
-        calendar.set(Calendar.DATE, validateIntegerInput());
+        calendar.set(Calendar.DATE, validateIntegerInput(1, 31, true));
         System.out.print("What is the Pay Date? Enter Year: ");
-        calendar.set(Calendar.YEAR, validateIntegerInput());
+        calendar.set(Calendar.YEAR, validateIntegerInput(1900, 2024, true));
         Date date = new Date(calendar.getTimeInMillis());
         
         payroll.setPayDate(date);
@@ -508,7 +527,7 @@ public class Admin {
         System.out.print("What is the Health Care? ");
         payroll.setHealthCare(validateDoubleInput());
         System.out.print("What is the Employee ID? ");
-        payroll.setEmpID(validateIntegerInput());
+        payroll.setEmpID(validateIntegerInput(0, 0, false));
         
         return payroll;
     }
@@ -525,11 +544,11 @@ public class Admin {
         address.setIdentifiedRace(validateStringInput());
         System.out.println("What is the Date of Birth? Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        calendar.set(Calendar.MONTH, validateIntegerInput(1, 12, true) - 1);
         System.out.println("What is the Date of Birth? Enter Day: ");
-        calendar.set(Calendar.DATE, validateIntegerInput());
+        calendar.set(Calendar.DATE, validateIntegerInput(1, 31, true));
         System.out.println("What is the Date of Birth? Enter Year: ");
-        calendar.set(Calendar.YEAR, validateIntegerInput());
+        calendar.set(Calendar.YEAR, validateIntegerInput(1900, 2024, true));
         Date date = new Date(calendar.getTimeInMillis());
         
         address.setDob(date);
@@ -537,9 +556,9 @@ public class Admin {
         address.setPhone(String.valueOf(validateLongInput()));
         // figure out what city and state ID are...
         System.out.println("What is the City ID? ");
-        address.setCityID(validateIntegerInput());
+        address.setCityID(validateIntegerInput(0, 0, false));
         System.out.println("What is the State ID? ");
-        address.setStateID(validateIntegerInput());
+        address.setStateID(validateIntegerInput(0, 0, false));
         return address;
     }
 
@@ -644,24 +663,6 @@ public class Admin {
 
     // region INPUT VALIDATION
 
-    private int validateMonthInput() {
-        int input = 0;
-        Scanner s = new Scanner(System.in);
-        while (true) {
-            try {
-                input = s.nextInt();
-                if (input >= 1 && input <= 12) {
-                    break;
-                }
-            } catch (Exception e) {
-                System.out.println(e);
-                // ignore what user typed to avoid infinite loop
-                s.nextLine();
-            }
-        }
-        return input;
-    }
-
     private long validateSSNInput() {
         long input = 0;
         Scanner s = new Scanner(System.in);
@@ -698,13 +699,21 @@ public class Admin {
         return input;
     }
 
-    private int validateIntegerInput() {
+    private int validateIntegerInput(int min, int max, boolean limit) {
         int input = 0;
         Scanner s = new Scanner(System.in);
         while (true) {
             try {
                 input = s.nextInt();
-                break;
+                if (limit) {
+                    if (input >= min && input <= max) {
+                        break;
+                    } else {
+                        System.out.println("Invalid selection");
+                    }
+                } else {
+                    break;
+                }
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
@@ -746,24 +755,6 @@ public class Admin {
         return input;
     }
 
-    private int validateSearchEmployeeInput() {
-        int input = 0;
-        Scanner s = new Scanner(System.in);
-        while (true) {
-            try {
-                input = s.nextInt();
-                if (input >= 1 && input <= 3) {
-                    break;
-                }
-            } catch (Exception e) {
-                System.out.println(e);
-                // ignore what user typed to avoid infinite loop
-                s.nextLine();
-            }
-        }
-        return input;
-    }
-
     // endregion
 
     // region SEARCH EMPLOYEE
@@ -777,10 +768,10 @@ public class Admin {
             System.out.println("1: Search by employee ID");
             System.out.println("2: Search by employee SSN");
             System.out.println("3: Search by employee NAME");
+            System.out.println("4: Search by employee SALARY");
             System.out.println();
-            int option = validateSearchEmployeeInput();
+            int option = validateIntegerInput(1, 4, true);
             System.out.println();
-            // List<Employee> employee = null;
     
             switch (option) {
                 case 1:
@@ -792,17 +783,20 @@ public class Admin {
                 case 3:
                     employee = getEmployeeByName();
                     break;
+                case 4:
+                    employee = getEmployeeBySalary(displaySalarySelection());
+                    break;
             }
         }
 
         for (Employee e : employee) {
             System.out.println("------------------------------------------------------");
-            System.out.println("Employee ID: " + e.getEmpID());
-            System.out.println("Full Name  : " + e.getFirstName() + " " + e.getLastName());
-            System.out.println("Email      : " + e.getEmail());
-            System.out.println("Hire Date  : " + e.getHireDate());
-            System.out.println(String.format("Salary     : $%.2f", e.getSalary()));
-            System.out.println("SSN        : " + e.getSsn());
+            System.out.println("Employee ID : " + e.getEmpID());
+            System.out.println("Full Name   : " + e.getFirstName() + " " + e.getLastName());
+            System.out.println("Email       : " + e.getEmail());
+            System.out.println("Hire Date   : " + e.getHireDate());
+            System.out.println(String.format("Salary      : $%.2f", e.getSalary()));
+            System.out.println("SSN         : " + e.getSsn());
         }
         return employee;
     }
@@ -857,13 +851,44 @@ public class Admin {
         return e;
     }
 
+    private List<Employee> getEmployeeBySalary(boolean range) {
+        clearConsole();
+        List<Employee> e = new ArrayList<>();
+        if (!range) {
+            System.out.print("Enter employee Salary or multiple Salaries separated by a comma (: 140000.00, 66000, 88000.00): ");
+            String employeeSalaries[] = validateStringInput().split("[\\s,]+");
+            for (Employee employee : employees.values()) {
+                for (String s : employeeSalaries) {
+                    BigDecimal bds = new BigDecimal(s);
+                    BigDecimal bde = new BigDecimal(employee.getSalary());
+                    if (bds.compareTo(bde) == 0) {
+                        e.add(employee);
+                    }
+                }
+            }
+        } else {
+            System.out.println("Enter employee Salary Range");
+            System.out.print("What is the minimum (inclusive) Salary amount: ");
+            double minSalary = validateDoubleInput();
+            System.out.print("What is the maximum (inclusive) Salary amount: ");
+            double maxSalary = validateDoubleInput();
+
+            for (Employee employee : employees.values()) {
+                if (employee.getSalary() >= minSalary && employee.getSalary() <= maxSalary) {
+                    e.add(employee);
+                }
+            }
+        }
+        return e;
+    }
+
     // endregion
 
     // region UPDATE EMPLOYEE
     
     private void updateEmployeeFirstName() {
         // clearConsole();
-        List<Employee> employee = searchEmployee();
+        List<Employee> employee = searchEmployee(null);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s, what is the First Name? ", e.getFirstName(), e.getLastName()));
@@ -885,7 +910,7 @@ public class Admin {
     }
 
     private void updateEmployeeLastName() {
-        List<Employee> employee = searchEmployee();
+        List<Employee> employee = searchEmployee(null);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s, what is the Last Name? ", e.getFirstName(), e.getLastName()));
@@ -907,7 +932,7 @@ public class Admin {
     }
 
     private void updateEmployeeEmail() {
-        List<Employee> employee = searchEmployee();
+        List<Employee> employee = searchEmployee(null);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s with email %s, what is the Email? ", e.getFirstName(), e.getLastName(), e.getEmail()));
@@ -929,7 +954,7 @@ public class Admin {
     }
 
     private void updateEmployeeHireDate() {
-        List<Employee> employee = searchEmployee();
+        List<Employee> employee = searchEmployee(null);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             Calendar calendar = Calendar.getInstance();
@@ -937,11 +962,11 @@ public class Admin {
             System.out.println();
             System.out.print("Enter Month: ");
             // Calendar.MONTH starts at index 0 = January ~ 11 = December
-            calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+            calendar.set(Calendar.MONTH, validateIntegerInput(1, 12, true) - 1);
             System.out.print("Enter Day: ");
-            calendar.set(Calendar.DATE, validateIntegerInput());
+            calendar.set(Calendar.DATE, validateIntegerInput(1, 31, true));
             System.out.print("Enter Year: ");
-            calendar.set(Calendar.YEAR, validateIntegerInput());
+            calendar.set(Calendar.YEAR, validateIntegerInput(1900, 2024, true));
             Date date = new Date(calendar.getTimeInMillis());
             // String newValue = validateStringInput().trim();
 
@@ -960,30 +985,52 @@ public class Admin {
         }
     }
 
-    private void updateEmployeeSalary() {
-        List<Employee> employee = searchEmployee();
-        for (Employee e : employee) {
-            int eID = e.getEmpID();
-            System.out.print(String.format("For employee %s %s with salary $%.2f, what is the Salary? ", e.getFirstName(), e.getLastName(), e.getSalary()));
-            double newValue = validateDoubleInput();
+    private void updateEmployeeSalary(boolean batch) {
+        System.out.println();
+        List<Employee> employee = searchEmployee(null);
+        if (!batch) {
+            for (Employee e : employee) {
+                int eID = e.getEmpID();
+                System.out.print(String.format("For employee %s %s with salary $%.2f, what is the Salary? ", e.getFirstName(), e.getLastName(), e.getSalary()));
+                double newValue = validateDoubleInput();
+    
+                try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                    String sqlCommad = "UPDATE employees SET Salary = ? WHERE empid = ?";
+                    PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                    ps.setDouble(1, newValue);
+                    ps.setInt(2, eID);
+                    ps.executeUpdate();
+    
+                    e.setSalary(newValue);
+                    myConn.close();
+                } catch (Exception error) {
+                    System.out.println("ERROR " + error.getLocalizedMessage());
+                }
+            }
+        } else {
+            System.out.print("What is the new Salary amount: ");
+            double newSalary = validateDoubleInput();
+            for (Employee e : employee) {
+                int eID = e.getEmpID();
 
-            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
-                String sqlCommad = "UPDATE employees SET Salary = ? WHERE empid = ?";
-                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
-                ps.setDouble(1, newValue);
-                ps.setInt(2, eID);
-                ps.executeUpdate();
-
-                e.setSalary(newValue);
-                myConn.close();
-            } catch (Exception error) {
-                System.out.println("ERROR " + error.getLocalizedMessage());
+                try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                    String sqlCommad = "UPDATE employees SET Salary = ? WHERE empid = ?";
+                    PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                    ps.setDouble(1, newSalary);
+                    ps.setInt(2, eID);
+                    ps.executeUpdate();
+    
+                    e.setSalary(newSalary);
+                    myConn.close();
+                } catch (Exception error) {
+                    System.out.println("ERROR " + error.getLocalizedMessage());
+                }
             }
         }
     }
 
     private void updateEmployeeSSN() {
-        List<Employee> employee = searchEmployee();
+        List<Employee> employee = searchEmployee(null);
         for (Employee e : employee) {
             int eID = e.getEmpID();
             System.out.print(String.format("For employee %s %s with ssn %s, what is the SSN? ", e.getFirstName(), e.getLastName(), e.getSsn()));
