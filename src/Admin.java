@@ -1,5 +1,7 @@
+import java.math.BigDecimal;
 import java.sql.*;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -17,11 +19,12 @@ public class Admin {
     private HashMap<Integer, Integer> employee_division;
     private HashMap<Integer, List<Payroll>> payrolls;
     private HashMap<Integer, Address> address;
-    private Scanner scanner;
     
     public Admin() {
         init();
     }
+
+    // region INITIALIZE
 
     private void init() {
         // Map empID to employee object
@@ -31,7 +34,6 @@ public class Admin {
         divisions = new HashMap<>();
         employee_division = new HashMap<>();
         payrolls = new HashMap<>();
-        scanner = new Scanner(System.in);
 
         // Initialize jobs locally
         try (Connection myConn = DriverManager.getConnection(url, user, password)) {
@@ -184,42 +186,56 @@ public class Admin {
         // }
     }
 
+    // endregion
+
+    // region DISPLAY OPTIONS
+
     public boolean displayMenu() {
-        System.out.println("What would you like to do?");
+        System.out.println();
+        System.out.println("Please select an option from the menu below");
+        System.out.println("------------------------------------------------------");
         System.out.println("0: Quit");
         System.out.println("1: Get Employee Information with Pay Statement History");
         System.out.println("2: Get Total Pay for Month by Job Title");
         System.out.println("3: Get Total Pay for Month by Division");
-        System.out.println("4: Search for an employee");
-        System.out.println("5: Update an employee's data");
-        System.out.println("6: Add a new employee");
-        System.out.println("7: Delete an employee");
+        System.out.println("4: Search for employee(s)");
+        System.out.println("5: Update a employee(s)");
+        System.out.println("6: Add a employee(s)");
+        System.out.println("7: Delete employee(s)");
         System.out.println("8: Increase employee salary by % if in range");
         System.out.println("9: Update all employee's salary less than amount");
         int option = validateIntegerInput();
 
         switch (option) {
             case 0:
+                clearConsole();
                 return false;
             case 1:
+                clearConsole();
                 System.out.println("You selected to get employee information with pay statement history");
                 break;
             case 2:
+                clearConsole();
                 getTotalPayForMonthByJobTitle();
                 break;
             case 3:
+                clearConsole();
                 getTotalPayForMonthByDivision();
                 break;
             case 4:
-                searchEmployee();
+                clearConsole();
+                searchEmployee(null);
                 break;
             case 5:
-                updateEmployeeData();
+                clearConsole();
+                displayUpdateSelection();
                 break;
             case 6:
+                clearConsole();
                 addEmployee();
                 break;
             case 7:
+                clearConsole();
                 deleteEmployee();
                 break;
             case 8:
@@ -228,78 +244,139 @@ public class Admin {
             case 9:
                 System.out.println("You selected to update all employee's salary less than amount");
                 break;
+            default:
+                System.out.println("That is not a valid option. Please select an option from the menu");
         }
         return true;
     }
 
-    public HashMap<Integer, Employee> getEmployees() {
-        return employees;
+    private void displayUpdateSelection() {
+        clearConsole();
+        System.out.println("What would you like to update?");
+        System.out.println("------------------------------------------------------");
+        System.out.println("1: First Name");
+        System.out.println("2: Last Name");
+        System.out.println("3: Email");
+        System.out.println("4: Hire Date");
+        System.out.println("5: Salary");
+        System.out.println("6: SSN");
+        int option = validateIntegerInput();
+
+        switch (option) {
+            case 1:
+                updateEmployeeFirstName();
+                break;
+            case 2:
+                updateEmployeeLastName();
+                break;
+            case 3:
+                updateEmployeeEmail();
+                break;
+            case 4:
+                updateEmployeeHireDate();
+                break;
+            case 5:
+                updateEmployeeSalary();
+                break;
+            case 6:
+                updateEmployeeSSN();
+                break;
+        }
     }
 
-    public HashMap<Integer, Division> getDivisions() {
-        return divisions;
+    private void displayJobSelection() {
+        System.out.println("------------------------------------------------------");
+        for (Job job : jobs.values()) {
+            System.out.println("Job ID: " + job.getJobID() + ": " + job.getTitle());
+        }
     }
 
-    public HashMap<Integer, Job> getJobs() {
-        return jobs;
+    private void displayDivisionSelection() {
+        System.out.println("------------------------------------------------------");
+        for (Division div : divisions.values()) {
+            System.out.println("Division ID: " + div.getDivisionID() + ": " + div.getName());
+        }
     }
+
+    public void clearConsole() {
+        System.out.println("\033[H\033[2J");
+        System.out.flush();
+    }
+
+    // endregion
+
+    // region ADD/DELETE
 
     public void addEmployee() {
-        Employee newEmployee = createEmployee();
-        int empID;
+        clearConsole();
+        System.out.print("How many employees would you like to add? ");
+        int numOfEmp = validateIntegerInput();
 
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn) VALUES (?, ?, ?, ?, ?, ?)";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand, Statement.RETURN_GENERATED_KEYS);
-            ps.setString(1, newEmployee.getFirstName());
-            ps.setString(2, newEmployee.getLastName());
-            ps.setString(3, newEmployee.getEmail());
-            ps.setDate(4, newEmployee.getHireDate());
-            ps.setDouble(5, newEmployee.getSalary());
-            ps.setString(6, newEmployee.getSsn());
-            ps.executeUpdate();
-            
-            ResultSet rs = ps.getGeneratedKeys();
-            rs.next();
-            // System.out.println("Getting ResultSet");
-            empID = rs.getInt(1);
+        for (int i = 0; i < numOfEmp; i++) {
+            System.out.println();
+            System.out.println(String.format("Adding employee %d", i + 1));
+            Employee newEmp = createEmployee();
+            int empID;
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommand = "INSERT INTO employees (Fname, Lname, email, HireDate, Salary, ssn) VALUES (?, ?, ?, ?, ?, ?)";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommand, Statement.RETURN_GENERATED_KEYS);
+                ps.setString(1, newEmp.getFirstName());
+                ps.setString(2, newEmp.getLastName());
+                ps.setString(3, newEmp.getEmail());
+                ps.setDate(4, newEmp.getHireDate());
+                ps.setDouble(5, newEmp.getSalary());
+                ps.setString(6, newEmp.getSsn());
+                ps.executeUpdate();
+                
+                ResultSet rs = ps.getGeneratedKeys();
+                rs.next();
+                // System.out.println("Getting ResultSet");
+                empID = rs.getInt(1);
+                System.out.println(empID);
 
-            sqlCommand = "INSERT INTO employee_job_titles (empid, job_title_id) VALUES (?, ?)";
-            ps = myConn.prepareStatement(sqlCommand);
-            ps.setInt(1, empID);
-            ps.setInt(2, newEmployee.getJobID());
-            ps.executeUpdate();
+                sqlCommand = "INSERT INTO employee_job_titles (empid, job_title_id) VALUES (?, ?)";
+                ps = myConn.prepareStatement(sqlCommand);
+                ps.setInt(1, empID);
+                ps.setInt(2, newEmp.getJobID());
+                ps.executeUpdate();
 
-            sqlCommand = "INSERT INTO employee_division (empid, div_ID) VALUES (?, ?)";
-            ps = myConn.prepareStatement(sqlCommand);
-            ps.setInt(1, empID);
-            ps.setInt(2, newEmployee.getDivID());
-            ps.executeUpdate();
+                sqlCommand = "INSERT INTO employee_division (empid, div_ID) VALUES (?, ?)";
+                ps = myConn.prepareStatement(sqlCommand);
+                ps.setInt(1, empID);
+                ps.setInt(2, newEmp.getDivID());
+                ps.executeUpdate();
 
-            employees.put(empID, newEmployee);
-            myConn.close();
-        } catch (Exception e) {
-            System.out.println("ERROR " + e.getLocalizedMessage());
+                newEmp.setEmpID(empID);
+                employees.put(empID, newEmp);
+                searchEmployee(Arrays.asList(newEmp));
+                myConn.close();
+            } catch (Exception e) {
+                System.out.println("ERROR " + e.getLocalizedMessage());
+            }
         }
     }
 
     private void deleteEmployee() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "DELETE FROM employees WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setInt(1, empID);
-            ps.executeUpdate();
+        clearConsole();
+        // Employee e = searchEmployee();
+        // int empID = e.getEmpID();
+        // try (Connection myConn = DriverManager.getConnection( url, user, password )) 
+        // {
+        //     String sqlCommand = "DELETE FROM employees WHERE empid = ?";
+        //     PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+        //     ps.setInt(1, empID);
+        //     ps.executeUpdate();
 
-            employees.remove(empID);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
-        }
+        //     employees.remove(empID);
+        //     myConn.close();
+        // } catch (Exception error) {
+        //     System.out.println("ERROR " + error.getLocalizedMessage());
+        // }
     }
+
+    // endregion
+
+    // region CREATE
 
     private Employee createEmployee() {
         Employee newEmployee = new Employee();
@@ -309,25 +386,26 @@ public class Admin {
         System.out.print("What is the Job Title? (Enter ID) ");
         newEmployee.setJobID(validateIntegerInput());
         System.out.println();
-        scanner.nextLine();
+        
         displayDivisionSelection();
         System.out.println();
         System.out.print("What is the Division Name? (Enter ID) ");
         newEmployee.setDivID(validateIntegerInput());
         System.out.println();
-        scanner.nextLine();
+        
         System.out.print("What is the First Name? ");
         newEmployee.setFirstName(validateStringInput());
         System.out.print("What is the Last Name? ");
         newEmployee.setLastName(validateStringInput());
         System.out.print("What is the Email? ");
         newEmployee.setEmail(validateStringInput());
-        System.out.print("What is the Hire Date? Enter Month: ");
+        System.out.println("What is the Hire Date?");
+        System.out.print("Enter Month: ");
         // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
-        System.out.print("What is the Hire Date? Enter Day: ");
+        calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+        System.out.print("Enter Day: ");
         calendar.set(Calendar.DATE, validateIntegerInput());
-        System.out.print("What is the Hire Date? Enter Year: ");
+        System.out.print("Enter Year: ");
         calendar.set(Calendar.YEAR, validateIntegerInput());
         Date date = new Date(calendar.getTimeInMillis());
         newEmployee.setHireDate(date);
@@ -335,24 +413,9 @@ public class Admin {
         newEmployee.setSalary(validateDoubleInput());
         System.out.print("What is the SSN (no dashes)? ");
         // first validate SSN is numerical, then convert to String
-        newEmployee.setSsn(String.valueOf(validateLongInput()));
+        newEmployee.setSsn(String.valueOf(validateSSNInput()));
         
-        // for testing purposes, need to read nextLine() to wait for input before print
-        // scanner.nextLine();
-        // System.out.println(date);
         return newEmployee;
-    }
-
-    private void displayJobSelection() {
-        for (Job job : jobs.values()) {
-            System.out.println("Job ID: " + job.getJobID() + ": " + job.getTitle());
-        }
-    }
-
-    private void displayDivisionSelection() {
-        for (Division div : divisions.values()) {
-            System.out.println("Division ID: " + div.getDivisionID() + ": " + div.getName());
-        }
     }
 
     public void addPayroll() {
@@ -421,9 +484,43 @@ public class Admin {
         payroll.setHealthCare(validateDoubleInput());
         System.out.print("What is the Employee ID? ");
         payroll.setEmpID(validateIntegerInput());
-        // set payroll.setEmpID
+        
         return payroll;
     }
+
+    private Address createAddress() {
+        Address address = new Address();
+        Calendar calendar = Calendar.getInstance();
+        
+        System.out.println("What is the Gender (M or F)? ");
+        address.setGender(validateStringInput());
+        System.out.println("What are the pronouns? ");
+        address.setPronouns(validateStringInput());
+        System.out.println("What is the Identified Race? ");
+        address.setIdentifiedRace(validateStringInput());
+        System.out.println("What is the Date of Birth? Enter Month: ");
+        // Calendar.MONTH starts at index 0 = January ~ 11 = December
+        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
+        System.out.println("What is the Date of Birth? Enter Day: ");
+        calendar.set(Calendar.DATE, validateIntegerInput());
+        System.out.println("What is the Date of Birth? Enter Year: ");
+        calendar.set(Calendar.YEAR, validateIntegerInput());
+        Date date = new Date(calendar.getTimeInMillis());
+        
+        address.setDob(date);
+        System.out.println("What is the Mobile Phone Number (no dashes)? ");
+        address.setPhone(String.valueOf(validateLongInput()));
+        // figure out what city and state ID are...
+        System.out.println("What is the City ID? ");
+        address.setCityID(validateIntegerInput());
+        System.out.println("What is the State ID? ");
+        address.setStateID(validateIntegerInput());
+        return address;
+    }
+
+    // endregion
+
+    // region GET REPORTS
 
     private void getTotalPayForMonthByJobTitle() {
         displayJobSelection();
@@ -518,50 +615,43 @@ public class Admin {
         System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + divName + ": $" + totalPay);
     }
 
-    private Address createAddress() {
-        Address address = new Address();
-        Calendar calendar = Calendar.getInstance();
-        
-        System.out.println("What is the Gender (M or F)? ");
-        scanner.nextLine();
-        address.setGender(validateStringInput());
-        System.out.println("What are the pronouns? ");
-        address.setPronouns(validateStringInput());
-        System.out.println("What is the Identified Race? ");
-        address.setIdentifiedRace(validateStringInput());
-        System.out.println("What is the Date of Birth? Enter Month: ");
-        // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
-        System.out.println("What is the Date of Birth? Enter Day: ");
-        calendar.set(Calendar.DATE, validateIntegerInput());
-        System.out.println("What is the Date of Birth? Enter Year: ");
-        calendar.set(Calendar.YEAR, validateIntegerInput());
-        Date date = new Date(calendar.getTimeInMillis());
-        
-        address.setDob(date);
-        System.out.println("What is the Mobile Phone Number (no dashes)? ");
-        address.setPhone(String.valueOf(validateLongInput()));
-        // figure out what city and state ID are...
-        System.out.println("What is the City ID? ");
-        address.setCityID(validateIntegerInput());
-        System.out.println("What is the State ID? ");
-        address.setStateID(validateIntegerInput());
-        return address;
-    }
+    // endregion
+
+    // region INPUT VALIDATION
 
     private int validateMonthInput() {
         int input = 0;
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextInt();
+                input = s.nextInt();
                 if (input >= 1 && input <= 12) {
-                    valid = false;
+                    break;
                 }
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
+            }
+        }
+        return input;
+    }
+
+    private long validateSSNInput() {
+        long input = 0;
+        Scanner s = new Scanner(System.in);
+        while (true) {
+            try {
+                input = s.nextLong();
+                if (Long.toString(input).length() == 9) {
+                    break;
+                } else {
+                    System.out.println("Invalid SSN (should be 9 digits)");
+                }
+            } catch (Exception e) {
+                System.out.println(e);
+                // ignore what user typed to avoid infinite loop
+                s.nextLine();
             }
         }
         return input;
@@ -569,15 +659,15 @@ public class Admin {
 
     private String validateStringInput() {
         String input = "";
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextLine();
-                valid = false;
+                input = s.nextLine();
+                break;
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
             }
         }
         return input;
@@ -585,15 +675,15 @@ public class Admin {
 
     private int validateIntegerInput() {
         int input = 0;
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextInt();
-                valid = false;
+                input = s.nextInt();
+                break;
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
             }
         }
         return input;
@@ -601,15 +691,15 @@ public class Admin {
 
     private long validateLongInput() {
         long input = 0;
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextLong();
-                valid = false;
+                input = s.nextLong();
+                break;
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
             }
         }
         return input;
@@ -617,273 +707,281 @@ public class Admin {
 
     private double validateDoubleInput() {
         double input = 0.0;
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextDouble();
-                valid = false;
+                input = s.nextDouble();
+                break;
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
             }
         }
         return input;
     }
 
-    private int validateSearchInput() {
+    private int validateSearchEmployeeInput() {
         int input = 0;
-        boolean valid = true;
-        while (valid) {
+        Scanner s = new Scanner(System.in);
+        while (true) {
             try {
-                input = scanner.nextInt();
+                input = s.nextInt();
                 if (input >= 1 && input <= 3) {
-                    valid = false;
+                    break;
                 }
             } catch (Exception e) {
                 System.out.println(e);
                 // ignore what user typed to avoid infinite loop
-                scanner.nextLine();
+                s.nextLine();
             }
         }
         return input;
     }
 
-    private Employee searchEmployee() {
-        System.out.println("Select an option");
-        System.out.println("1: Search by employee ID");
-        System.out.println("2: Search by employee SSN");
-        System.out.println("3: Search by employee NAME");
-        int option = validateSearchInput();
-        Employee e = null;
+    // endregion
 
-        switch (option) {
-            case 1:
-                e = getEmployeeByID();
-                break;
-            case 2:
-                e = getEmployeeBySSN();
-                break;
-            case 3:
-                e = getEmployeeByName();
-                break;
+    // region SEARCH EMPLOYEE
+
+    private List<Employee> searchEmployee(List<Employee> emp) {
+        List<Employee> employee = emp;
+        if (employee == null) {
+            clearConsole();
+            System.out.println("Select an option");
+            System.out.println("------------------------------------------------------");
+            System.out.println("1: Search by employee ID");
+            System.out.println("2: Search by employee SSN");
+            System.out.println("3: Search by employee NAME");
+            System.out.println();
+            int option = validateSearchEmployeeInput();
+            System.out.println();
+            // List<Employee> employee = null;
+    
+            switch (option) {
+                case 1:
+                    employee = getEmployeeByID();
+                    break;
+                case 2:
+                    employee = getEmployeeBySSN();
+                    break;
+                case 3:
+                    employee = getEmployeeByName();
+                    break;
+            }
         }
 
-        if (e != null) {
+        for (Employee e : employee) {
+            System.out.println("------------------------------------------------------");
             System.out.println("Employee ID: " + e.getEmpID());
-            System.out.println("Full Name: " + e.getFirstName() + " " + e.getLastName());
-            System.out.println("Email: " + e.getEmail());
-            System.out.println("Hire Date: " + e.getHireDate());
-            System.out.println("Salary: $" + e.getSalary());
-            System.out.println("SSN: " + e.getSsn());
-        } else {
-            System.out.println(String.format("Employee not found"));
+            System.out.println("Full Name  : " + e.getFirstName() + " " + e.getLastName());
+            System.out.println("Email      : " + e.getEmail());
+            System.out.println("Hire Date  : " + e.getHireDate());
+            System.out.println(String.format("Salary     : $%.2f", e.getSalary()));
+            System.out.println("SSN        : " + e.getSsn());
+        }
+        return employee;
+    }
+
+    private List<Employee> getEmployeeByID() {
+        clearConsole();
+        System.out.print("Enter employee ID or multiple ID separated by a comma (1, 5, 7, 12, 55): ");
+        String employeeStringID[] = validateStringInput().split("[\\s,]+");
+        List<Integer> employeeIntID = new ArrayList<>();
+        for (String s : employeeStringID) {
+            employeeIntID.add(Integer.parseInt(s));
+        }
+        List<Employee> e = new ArrayList<>();
+        for (int i : employeeIntID) {
+            if (employees.containsKey(i)) {
+                e.add(employees.get(i));
+            } else {
+                System.out.println("Employee with ID: " + i + " does not exist");
+            }
+        }
+        return e;
+    }
+    
+    private List<Employee> getEmployeeBySSN() {
+        clearConsole();
+        System.out.print("Enter employee SSN or multiple SSN separated by a comma (215961123, 214398841, 291298391): ");
+        String employeeStringSSN[] = validateStringInput().split("[\\s,]+");
+        List<Employee> e = new ArrayList<>();
+        for (Employee employee : employees.values()) {
+            for (String s : employeeStringSSN) {
+                if (s.equals(employee.getSsn())) {
+                    e.add(employee);
+                }
+            }
         }
         return e;
     }
 
-    private Employee getEmployeeByID() {
-        System.out.print("Enter employee's ID: ");
-        int empID = validateIntegerInput();
-        return employees.getOrDefault(empID, null);
-    }
-    
-    private Employee getEmployeeBySSN() {
-        System.out.print("Enter employee's SSN: ");
-        scanner.nextLine();
-        String ssn = validateStringInput();
-        Employee e = null;
+    private List<Employee> getEmployeeByName() {
+        clearConsole();
+        System.out.print("Enter employee Name or multiple Name separated by a comma (John Doe, Jane Doe, Dwight Schrute): ");
+        String employeeStringName[] = validateStringInput().split("[,]+");
+        List<Employee> e = new ArrayList<>();
         for (Employee employee : employees.values()) {
-            if (ssn.equals(employee.getSsn())) {
-                return employee;
+            String empName = employee.getFirstName() + " " + employee.getLastName();
+            for (String s : employeeStringName) {
+                if (empName.toLowerCase().contains(s.trim().toLowerCase())) {
+                    e.add(employee);
+                }
             }
         }
-        return null;
+        return e;
     }
 
-    private Employee getEmployeeByName() {
-        System.out.println("Enter employee's Name: ");
-        scanner.nextLine();
-        String name = validateStringInput();
-        for (Employee e : employees.values()) {
-            String empName = e.getFirstName() + " " + e.getLastName();
-            if (empName.toLowerCase().contains(name.toLowerCase())) {
-                return e;
-            }
-        }
-        return null;
-    }
+    // endregion
 
-    private void updateEmployeeData() {
-        System.out.println("What would you like to update?");
-        System.out.println("1: First Name");
-        System.out.println("2: Last Name");
-        System.out.println("3: Email");
-        System.out.println("4: Hire Date");
-        System.out.println("5: Salary");
-        System.out.println("6: SSN");
-        int option = validateIntegerInput();
-
-        switch (option) {
-            case 1:
-                updateEmployeeFirstName();
-                break;
-            case 2:
-                updateEmployeeLastName();
-                break;
-            case 3:
-                updateEmployeeEmail();
-                break;
-            case 4:
-                updateEmployeeHireDate();
-                break;
-            case 5:
-                updateEmployeeSalary();
-                break;
-            case 6:
-                updateEmployeeSSN();
-                break;
-        }
-    }
-
+    // region UPDATE EMPLOYEE
+    
     private void updateEmployeeFirstName() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        System.out.print("What is the new First Name? ");
-        scanner.nextLine();
-        String newValue = validateStringInput();
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET Fname = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setString(1, newValue);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        // clearConsole();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            System.out.print(String.format("For employee %s %s, what is the First Name? ", e.getFirstName(), e.getLastName()));
+            String newValue = validateStringInput().trim();
 
-            e.setFirstName(newValue);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET Fname = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setString(1, newValue);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setFirstName(newValue);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
 
     private void updateEmployeeLastName() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        System.out.print("What is the new Last Name? ");
-        scanner.nextLine();
-        String newValue = validateStringInput();
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET Lname = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setString(1, newValue);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            System.out.print(String.format("For employee %s %s, what is the Last Name? ", e.getFirstName(), e.getLastName()));
+            String newValue = validateStringInput().trim();
 
-            e.setLastName(newValue);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET Lname = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setString(1, newValue);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setLastName(newValue);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
 
     private void updateEmployeeEmail() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        System.out.print("What is the new Email? ");
-        scanner.nextLine();
-        String newValue = validateStringInput();
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET email = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setString(1, newValue);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            System.out.print(String.format("For employee %s %s with email %s, what is the Email? ", e.getFirstName(), e.getLastName(), e.getEmail()));
+            String newValue = validateStringInput().trim();
 
-            e.setEmail(newValue);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET email = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setString(1, newValue);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setEmail(newValue);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
 
     private void updateEmployeeHireDate() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        Calendar calendar = Calendar.getInstance();
-        System.out.println("What is the new Hire Date? ");
-        System.out.print("Enter Month: ");
-        // Calendar.MONTH starts at index 0 = January ~ 11 = December
-        calendar.set(Calendar.MONTH, validateIntegerInput() - 1);
-        System.out.print("Enter Day: ");
-        calendar.set(Calendar.DATE, validateIntegerInput());
-        System.out.print("Enter Year: ");
-        calendar.set(Calendar.YEAR, validateIntegerInput());
-        Date date = new Date(calendar.getTimeInMillis());
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET HireDate = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setDate(1, date);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            Calendar calendar = Calendar.getInstance();
+            System.out.print("For employee " + e.getFirstName() + " " + e.getLastName() + " with hire date " + e.getHireDate() + ", what is the Hire Date? ");
+            System.out.println();
+            System.out.print("Enter Month: ");
+            // Calendar.MONTH starts at index 0 = January ~ 11 = December
+            calendar.set(Calendar.MONTH, validateMonthInput() - 1);
+            System.out.print("Enter Day: ");
+            calendar.set(Calendar.DATE, validateIntegerInput());
+            System.out.print("Enter Year: ");
+            calendar.set(Calendar.YEAR, validateIntegerInput());
+            Date date = new Date(calendar.getTimeInMillis());
+            // String newValue = validateStringInput().trim();
 
-            e.setHireDate(date);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET HireDate = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setDate(1, date);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setHireDate(date);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
 
     private void updateEmployeeSalary() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        System.out.print("What is the new Salary? ");
-        scanner.nextLine();
-        double newValue = validateDoubleInput();
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET Salary = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setDouble(1, newValue);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            System.out.print(String.format("For employee %s %s with salary $%.2f, what is the Salary? ", e.getFirstName(), e.getLastName(), e.getSalary()));
+            double newValue = validateDoubleInput();
 
-            e.setSalary(newValue);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET Salary = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setDouble(1, newValue);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setSalary(newValue);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
 
     private void updateEmployeeSSN() {
-        Employee e = searchEmployee();
-        int empID = e.getEmpID();
-        System.out.print("What is the new SSN? ");
-        scanner.nextLine();
-        String newValue = validateStringInput();
-        
-        try (Connection myConn = DriverManager.getConnection( url, user, password )) 
-        {
-            String sqlCommand = "UPDATE employees SET ssn = ? WHERE empid = ?";
-            PreparedStatement ps = myConn.prepareStatement(sqlCommand);
-            ps.setString(1, newValue);
-            ps.setInt(2, empID);
-            ps.executeUpdate();
+        List<Employee> employee = searchEmployee();
+        for (Employee e : employee) {
+            int eID = e.getEmpID();
+            System.out.print(String.format("For employee %s %s with ssn %s, what is the SSN? ", e.getFirstName(), e.getLastName(), e.getSsn()));
+            String newValue = validateStringInput().trim();
 
-            e.setSsn(newValue);
-            myConn.close();
-        } catch (Exception error) {
-            System.out.println("ERROR " + error.getLocalizedMessage());
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                String sqlCommad = "UPDATE employees SET ssn = ? WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommad);
+                ps.setString(1, newValue);
+                ps.setInt(2, eID);
+                ps.executeUpdate();
+
+                e.setSsn(newValue);
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
         }
     }
+
+    // endregion
+
+    // region TESTING
 
     private void queryTester() {
         try (Connection myConn = DriverManager.getConnection(url, user, password)) 
@@ -909,4 +1007,6 @@ public class Admin {
             System.out.println("ERROR " + e.getLocalizedMessage());
         }
     }
+
+    // endregion
 }
