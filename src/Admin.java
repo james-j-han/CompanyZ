@@ -22,6 +22,7 @@ public class Admin {
     
     public Admin() {
         init();
+        clearConsole();
     }
 
     // region INITIALIZE
@@ -298,7 +299,7 @@ public class Admin {
         }
     }
 
-    public void clearConsole() {
+    private void clearConsole() {
         System.out.println("\033[H\033[2J");
         System.out.flush();
     }
@@ -330,9 +331,7 @@ public class Admin {
                 
                 ResultSet rs = ps.getGeneratedKeys();
                 rs.next();
-                // System.out.println("Getting ResultSet");
                 empID = rs.getInt(1);
-                System.out.println(empID);
 
                 sqlCommand = "INSERT INTO employee_job_titles (empid, job_title_id) VALUES (?, ?)";
                 ps = myConn.prepareStatement(sqlCommand);
@@ -358,6 +357,32 @@ public class Admin {
 
     private void deleteEmployee() {
         clearConsole();
+        List<Employee> employee = searchEmployee(null);
+        for (Employee e : employee) {
+            int empID = e.getEmpID();
+            try (Connection myConn = DriverManager.getConnection(url, user, password)) {
+                Statement stmt = myConn.createStatement();
+                stmt.execute("SET FOREIGN_KEY_CHECKS = 0");
+                // delete foreign key restraint first
+                String sqlCommand = "DELETE FROM employee_division WHERE empid = ?";
+                PreparedStatement ps = myConn.prepareStatement(sqlCommand);
+                ps.setInt(1, empID);
+                ps.executeUpdate();
+                System.out.println("Delete from employee_division successful");
+
+                // delete employee
+                sqlCommand = "DELETE FROM employees WHERE empid = ?";
+                ps = myConn.prepareStatement(sqlCommand);
+                ps.setInt(1, empID);
+                ps.executeUpdate();
+
+                employees.remove(empID);
+                stmt.execute("SET FOREIGN_KEY_CHECKS = 1");
+                myConn.close();
+            } catch (Exception error) {
+                System.out.println("ERROR " + error.getLocalizedMessage());
+            }
+        }
         // Employee e = searchEmployee();
         // int empID = e.getEmpID();
         // try (Connection myConn = DriverManager.getConnection( url, user, password )) 
