@@ -13,9 +13,13 @@ public class Admin {
     private static String user = "root";
     private static String password = "Yessica6446!";
     private HashMap<Integer, Employee> employees;
+    // jobs = {jobID : job}
     private HashMap<Integer, Job> jobs;
+    // employee_job_titles = {empID : job}
     private HashMap<Integer, Integer> employee_job_titles;
+    // divisions = {divID : division}
     private HashMap<Integer, Division> divisions;
+    // employee_division {empID : divID}
     private HashMap<Integer, Integer> employee_division;
     private HashMap<Integer, List<Payroll>> payrolls;
     private HashMap<Integer, Address> address;
@@ -657,6 +661,7 @@ public class Admin {
             }
         }
 
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + job_title + ": $" + totalPay);
     }
 
@@ -686,6 +691,30 @@ public class Admin {
         double totalPay = 0;
         String divName = "";
 
+        // // check employee_division for matching divID and store empID in list
+        // List<Integer> empIDList = new ArrayList<>();
+        // for (int i : employee_division.keySet()) {
+        //     if (i == divID) {
+        //         empIDList.add(divID);
+        //     }
+        // }
+
+        // // we now have a list of employee IDs and need to grab a list of employees
+        // int left = 0;
+        // int right = 0;
+        // List<Employee> employeeList = new ArrayList<>();
+        // for (int empID : employees.keySet()) {
+        //     if (empIDList.contains(empID)) {
+        //         employeeList.add(employees.get(empID));
+        //     }
+        // }
+
+        // // now we have a list of employees and check date range
+        // for (Employee e : employeeList) {
+        //     if ()
+        // }
+
+        // brute force
         for (int empID : employee_division.keySet()) {
             int div_id = employee_division.getOrDefault(empID, 0);
 
@@ -704,6 +733,7 @@ public class Admin {
             }
         }
 
+        System.out.println("---------------------------------------------------------------------------------------------------------");
         System.out.println("Total Pay between " + startDate + " and " + endDate + " for " + divName + ": $" + totalPay);
     }
 
