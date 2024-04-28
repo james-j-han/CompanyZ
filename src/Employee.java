@@ -11,9 +11,14 @@ public class Employee {
     private String ssn;
     private int jobID;
     private int divID;
+    private boolean fullTime;
 
     public Employee() {
         
+    }
+
+    public Employee(boolean fullTime) {
+        this.fullTime = fullTime;
     }
 
     public int getEmpID() {
@@ -86,5 +91,13 @@ public class Employee {
 
     public void setDivID(int divID) {
         this.divID = divID;
+    }
+
+    public boolean getEmployeeType() {
+        return fullTime;
+    }
+
+    public void setEmployeeType(boolean fullTime) {
+        this.fullTime = fullTime;
     }
 }

@@ -255,8 +255,9 @@ public class Admin {
         System.out.println("2: Search by employee SSN");
         System.out.println("3: Search by employee NAME");
         System.out.println("4: Search by employee SALARY");
+        System.out.println("5: Search by employee TYPE");
         System.out.println();
-        int option = validateIntegerInput(1, 4, true);
+        int option = validateIntegerInput(1, 5, true);
         List<Employee> e = new ArrayList<>();
 
         switch (option) {
@@ -271,6 +272,9 @@ public class Admin {
                 break;
             case 4:
                 e = getEmployee(getEmployeeBySalary(displaySalarySelection()), payHistory);
+                break;
+            case 5:
+                e = getEmployee(getEmployeeByType(), payHistory);
                 break;
         }
         System.out.println();
@@ -860,12 +864,28 @@ public class Admin {
 
     private List<Employee> getEmployeeByID() {
         clearConsole();
-        System.out.print("Enter employee ID or multiple ID separated by a comma (1, 5, 7, 12, 55): ");
-        String employeeStringID[] = validateStringInput().split("[\\s,]+");
+        // System.out.print("Enter employee ID or multiple ID separated by a comma (1, 5, 7, 12, 55): ");
+        // String employeeStringID[] = validateStringInput().trim().split("[\\s,]+");
         List<Integer> employeeIntID = new ArrayList<>();
-        for (String s : employeeStringID) {
-            employeeIntID.add(Integer.parseInt(s));
+
+        while (true) {
+            try {
+                System.out.print("Enter employee ID or multiple ID separated by a comma (1, 5, 7, 12, 55): ");
+                String employeeStringID[] = validateStringInput().trim().split("[\\s,]+");
+                for (String s : employeeStringID) {
+                    employeeIntID.add(Integer.parseInt(s));
+                }
+                break;
+            } catch (Exception e) {
+                // System.out.println("ERROR: " + e);
+                System.out.println("There was an error with the input.");
+                System.out.println();
+            }
         }
+        
+        // for (String s : employeeStringID) {
+        //     employeeIntID.add(Integer.parseInt(s));
+        // }
         List<Employee> e = new ArrayList<>();
         for (int i : employeeIntID) {
             if (employees.containsKey(i)) {
@@ -880,7 +900,7 @@ public class Admin {
     private List<Employee> getEmployeeBySSN() {
         clearConsole();
         System.out.print("Enter employee SSN or multiple SSN separated by a comma (215961123, 214398841, 291298391): ");
-        String employeeStringSSN[] = validateStringInput().split("[\\s,]+");
+        String employeeStringSSN[] = validateStringInput().trim().split("[\\s,]+");
         List<Employee> e = new ArrayList<>();
         for (Employee employee : employees.values()) {
             for (String s : employeeStringSSN) {
@@ -894,7 +914,7 @@ public class Admin {
 
     private List<Employee> getEmployeeByName() {
         clearConsole();
-        System.out.print("Enter employee Name or multiple Name separated by a comma (John Doe, Jane Doe, Dwight Schrute): ");
+        System.out.print("Enter employee Name or multiple Names separated by a comma (John Doe, Jane Doe, Dwight Schrute): ");
         String employeeStringName[] = validateStringInput().split("[,]+");
         List<Employee> e = new ArrayList<>();
         for (Employee employee : employees.values()) {
@@ -913,7 +933,7 @@ public class Admin {
         List<Employee> e = new ArrayList<>();
         if (!range) {
             System.out.print("Enter employee Salary or multiple Salaries separated by a comma (: 140000.00, 66000, 88000.00): ");
-            String employeeSalaries[] = validateStringInput().split("[\\s,]+");
+            String employeeSalaries[] = validateStringInput().trim().split("[\\s,]+");
             for (Employee employee : employees.values()) {
                 for (String s : employeeSalaries) {
                     BigDecimal bds = new BigDecimal(s);
@@ -935,6 +955,34 @@ public class Admin {
                     e.add(employee);
                 }
             }
+        }
+        return e;
+    }
+
+    private List<Employee> getEmployeeByType() {
+        clearConsole();
+        System.out.println("Select an employee type");
+        System.out.println("---------------------------------------------------------------------------------------------------------");
+        System.out.print("1: Full Time");
+        System.out.print("2: Part Time");
+        int input = validateIntegerInput(1, 2, true);
+        List<Employee> e = new ArrayList<>();
+        switch (input) {
+            case 1:
+                for (Employee employee : employees.values()) {
+                    if (employee.getEmployeeType()) {
+                        e.add(employee);
+                    }
+                }
+                break;
+        
+            case 2:
+                for (Employee employee : employees.values()) {
+                    if (!employee.getEmployeeType()) {
+                        e.add(employee);
+                    }
+                }
+                break;
         }
         return e;
     }
